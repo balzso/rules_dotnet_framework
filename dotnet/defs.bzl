@@ -7,7 +7,8 @@ load(
 )
 load(
     "@io_bazel_rules_dotnet//dotnet/toolchain:toolchains.bzl",
-    _core_register_sdk = "core_register_sdk",
+    # NOTE: core_register_sdk disabled (.NET Core not needed for VSTO)
+    # _core_register_sdk = "core_register_sdk",
     _dotnet_register_toolchains = "dotnet_register_toolchains",
     _mono_register_sdk = "mono_register_sdk",
     _net_register_sdk = "net_register_sdk",
@@ -128,7 +129,8 @@ dotnet_context = _dotnet_context
 dotnet_register_toolchains = _dotnet_register_toolchains
 mono_register_sdk = _mono_register_sdk
 net_register_sdk = _net_register_sdk
-core_register_sdk = _core_register_sdk
+# NOTE: core_register_sdk disabled (.NET Core not needed for VSTO)
+# core_register_sdk = _core_register_sdk
 wix_register_sdk = _wix_register_sdk
 vsto_utilities_register = _vsto_utilities_register
 dotnet_toolchain = _dotnet_toolchain
