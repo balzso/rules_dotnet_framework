@@ -5,13 +5,13 @@ DOTNETIMPL = [
 ]
 
 DOTNETOS = {
-    "darwin": "@platforms//:osx",
-    "linux": "@platforms//:linux",
-    "windows": "@platforms//:windows",
+    "darwin": "@platforms//os:osx",
+    "linux": "@platforms//os:linux",
+    "windows": "@platforms//os:windows",
 }
 
 DOTNETARCH = {
-    "amd64": "@platforms//:x86_64",
+    "amd64": "@platforms//cpu:x86_64",
 }
 
 DOTNETIMPL_OS_ARCH = (
