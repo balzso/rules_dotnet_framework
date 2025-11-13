@@ -52,12 +52,17 @@ def dotnet_context(ctx, attr = None):
         stdlib = None
         resgen = None
         tlbimp = None
+        mage = None
+        mage_wrapper = None
     else:
         runner = toolchain.get_dotnet_runner(context_data, ext)
         mcs = toolchain.get_dotnet_mcs(context_data)
         stdlib = toolchain.get_dotnet_stdlib(context_data)
         resgen = toolchain.get_dotnet_resgen(context_data)
         tlbimp = toolchain.get_dotnet_tlbimp(context_data)
+        mage = toolchain.get_dotnet_mage(context_data)
+        # VSTO mage_wrapper is framework-specific
+        mage_wrapper = context_data._mage_wrapper if hasattr(context_data, "_mage_wrapper") else None
 
     return DotnetContext(
         # Fields
@@ -74,6 +79,8 @@ def dotnet_context(ctx, attr = None):
         stdlib = stdlib,
         resgen = resgen,
         tlbimp = tlbimp,
+        mage = mage,
+        mage_wrapper = mage_wrapper,
         declare_file = _declare_file,
         new_library = new_library,
         new_resource = _new_resource,
@@ -100,6 +107,7 @@ def _dotnet_context_data(ctx):
         _runner = ctx.attr.runner,
         _csc = ctx.attr.csc,
         _runtime = ctx.attr.runtime,
+        _mage_wrapper = ctx.attr.mage_wrapper,
     )
 
 dotnet_context_data = rule(
@@ -222,6 +230,11 @@ net_context_data = rule(
         ),
         "runner": attr.label(default = None),
         "csc": attr.label(executable = True, cfg = "host", default = "@net_sdk//:csc"),
+        "mage_wrapper": attr.label(
+            executable = True,
+            cfg = "host",
+            default = None,
+        ),
     },
     toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_net"],
 )

@@ -32,6 +32,13 @@ def _vsto_addin_impl(ctx):
     dotnet = dotnet_context(ctx)
     name = ctx.label.name
 
+    # Override mage_wrapper in dotnet context from rule attribute
+    if ctx.executable.mage_wrapper:
+        # Create a new struct with mage_wrapper added, preserving all fields including private ones
+        dotnet_dict = {k: getattr(dotnet, k) for k in dir(dotnet)}
+        dotnet_dict["mage_wrapper"] = ctx.executable.mage_wrapper
+        dotnet = struct(**dotnet_dict)
+
     # Validate inputs
     if not name.endswith(".dll"):
         fail("name must end with .dll for VSTO add-ins")
@@ -165,6 +172,11 @@ net_vsto_addin = rule(
         ),
         "cert_password": attr.string(
             doc = "Optional certificate password",
+        ),
+        "mage_wrapper": attr.label(
+            executable = True,
+            cfg = "host",
+            doc = "Optional mage_wrapper tool (auto-selected based on target_framework if not specified)",
         ),
     },
     toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_net"],

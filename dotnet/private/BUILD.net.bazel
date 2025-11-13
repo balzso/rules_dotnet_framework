@@ -23,16 +23,18 @@ filegroup(
 
 filegroup(
     name = "shared",
-    srcs = glob([
-        "shared/**/*",
-    ]),
+    srcs = glob(
+        ["shared/**/*"],
+        allow_empty = True,
+    ),
 )
 
 filegroup(
     name = "tools",
-    srcs = glob([
-        "tools/**/*",
-    ]),
+    srcs = glob(
+        ["tools/**/*"],
+        allow_empty = True,
+    ),
 )
 
 filegroup(
