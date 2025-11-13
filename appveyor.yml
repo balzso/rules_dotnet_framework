@@ -1,0 +1,39 @@
+version: 1.0.{build}
+
+# Maximum number of concurrent jobs for the project
+max_jobs: 1
+
+#---------------------------------#
+#    environment configuration    #
+#---------------------------------#
+
+# Build worker image (VM template)
+image: Visual Studio 2019
+
+# scripts that are called at very beginning, before repo cloning
+init:
+  - git config --global core.autocrlf input
+
+install:
+  - choco install mono
+  - choco install bazel
+
+  
+build_script:
+  - ver
+  - bazel --host_jvm_args=-Xmx500m --host_jvm_args=-Xms500m build --spawn_strategy=standalone //...
+
+test_script:
+  - bazel --host_jvm_args=-Xmx500m --host_jvm_args=-Xms500m run --spawn_strategy=standalone //tests/examples/example_binary:hello.exe
+  - bazel --host_jvm_args=-Xmx500m --host_jvm_args=-Xms500m run --spawn_strategy=standalone //tests/examples/example_binary:v2.1.200_hello-core.exe
+  - bazel --host_jvm_args=-Xmx500m --host_jvm_args=-Xms500m test --test_summary=detailed --spawn_strategy=standalone --test_output=all //... 
+  - cd docs\examples\mono
+  - bazel --host_jvm_args=-Xmx500m --host_jvm_args=-Xms500m test --spawn_strategy=standalone //...
+  - cd ..\grpc
+  - bazel --host_jvm_args=-Xmx500m --host_jvm_args=-Xms500m test --spawn_strategy=standalone //...
+  - cd ..\ef
+  - bazel --host_jvm_args=-Xmx500m --host_jvm_args=-Xms500m test --spawn_strategy=standalone //...
+
+
+deploy: off
+

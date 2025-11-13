@@ -1,0 +1,57 @@
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "mcs_bin",
+    srcs = glob([
+        "mcs_bin/*",
+    ]),
+)
+
+filegroup(
+    name = "mono_bin",
+    srcs = glob([
+        "mono_bin/*",
+    ]),
+)
+
+filegroup(
+    name = "lib",
+    srcs = glob([
+        "lib/**/*",
+    ]),
+)
+
+
+filegroup(
+    name = "host",
+    srcs = glob([
+        "host/**/*",
+    ]),
+)
+
+exports_files(glob(["core/**/*.dll"]))
+
+filegroup(
+    name = "runner",
+    srcs = select({
+        "@bazel_tools//src/conditions:windows": ["core/dotnet.exe"],
+        "//conditions:default": ["core/dotnet"],
+    }),
+    data = glob(["core/host/**/*"]),
+)
+
+filegroup(
+    name = "csc_deps",
+    srcs = glob(["core/**/bincore/*.dll"], exclude=["core/**/bincore/csc.dll"]),
+)
+
+
+filegroup(
+    name = "shared",
+    srcs = glob([
+        "core/shared/**/*",
+    ]),
+)
+
+exports_files(glob(["core/shared/**/*"]))
+exports_files(glob(["core/**/bincore/csc.dll"]))

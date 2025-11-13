@@ -1,0 +1,30 @@
+load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_library", "core_xunit_test")
+
+core_library(
+    name = "custom_bin.dll",
+    srcs = [
+        "main.cs",
+    ],
+    out = "alt_bin.dll",
+    deps = [
+        "@io_bazel_rules_dotnet//dotnet/stdlib.core:libraryset",
+    ],
+)
+
+core_xunit_test(
+    name = "custom_bin_test.dll",
+    size = "medium",
+    srcs = [
+        "main_test.cs",
+    ],
+    data = [
+        ":custom_bin.dll",
+    ],
+    version = "1.0",
+    deps = [
+        "@io_bazel_rules_dotnet//dotnet/stdlib.core:libraryset",
+        "@xunit.assert//:core",
+        "@xunit.extensibility.core//:core",
+        "@xunit.extensibility.execution//:core",
+    ],
+)
