@@ -6,7 +6,7 @@ load(
     "@io_bazel_rules_dotnet//dotnet/private:providers.bzl",
     "DotnetLibrary",
 )
-load("@io_bazel_rules_dotnet//dotnet/private:rules/common.bzl", "collect_transitive_info")
+load("@io_bazel_rules_dotnet//dotnet/private/rules:common.bzl", "collect_transitive_info")
 load("@io_bazel_rules_dotnet//dotnet/private:common.bzl", "as_iterable")
 
 def _libraryset_impl(ctx):

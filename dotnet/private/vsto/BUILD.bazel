@@ -1,0 +1,6 @@
+# Empty BUILD file to make this directory a Bazel package
+# This allows .bzl files in this directory to be loaded from other packages
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(glob(["*.bzl"]))

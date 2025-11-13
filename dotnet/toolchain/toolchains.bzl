@@ -2,10 +2,11 @@ load(
     "@io_bazel_rules_dotnet//dotnet/private:dotnet_toolchain.bzl",
     "dotnet_toolchain",
 )
-load(
-    "@io_bazel_rules_dotnet//dotnet/private:core_toolchain.bzl",
-    "core_toolchain",
-)
+# NOTE: core_toolchain removed/missing - commented out (.NET Core not needed for VSTO)
+# load(
+#     "@io_bazel_rules_dotnet//dotnet/private:core_toolchain.bzl",
+#     "core_toolchain",
+# )
 load(
     "@io_bazel_rules_dotnet//dotnet/private:net_toolchain.bzl",
     "net_toolchain",
@@ -18,10 +19,11 @@ load(
     "@io_bazel_rules_dotnet//dotnet/private:sdk.bzl",
     "dotnet_host_sdk",
 )
-load(
-    "@io_bazel_rules_dotnet//dotnet/private:sdk_core.bzl",
-    "core_download_sdk",
-)
+# NOTE: sdk_core.bzl removed/missing - commented out (.NET Core not needed for VSTO)
+# load(
+#     "@io_bazel_rules_dotnet//dotnet/private:sdk_core.bzl",
+#     "core_download_sdk",
+# )
 load(
     "@io_bazel_rules_dotnet//dotnet/private:sdk_net.bzl",
     "net_download_sdk",
@@ -262,13 +264,14 @@ def declare_toolchains():
                 os = toolchain["os"],
                 constraints = toolchain["constraints"],
             )
-        elif toolchain["impl"] == "core":
-            core_toolchain(
-                name = toolchain["name"],
-                arch = toolchain["arch"],
-                os = toolchain["os"],
-                constraints = toolchain["constraints"],
-            )
+        # NOTE: .NET Core toolchain disabled (core_toolchain.bzl missing)
+        # elif toolchain["impl"] == "core":
+        #     core_toolchain(
+        #         name = toolchain["name"],
+        #         arch = toolchain["arch"],
+        #         os = toolchain["os"],
+        #         constraints = toolchain["constraints"],
+        #     )
         elif toolchain["impl"] == "net":
             if toolchain["os"] == "windows" and toolchain["arch"]=="amd64":
                 net_toolchain(
@@ -297,15 +300,16 @@ def net_register_sdk(net_version = NET_DEFAULT_VERSION, net_roslyn_version = NET
         sdks = NET_ROSLYN_REPOSITORIES[net_roslyn_version],
     )
 
-def core_register_sdk(core_version = CORE_DEFAULT_VERSION, name = "core_sdk"):
-    if core_version not in CORE_SDK_REPOSITORIES:
-        fail("Unknown core version {}".format(core_version))
-
-    core_download_sdk(
-        name = name if name else "core_sdk_{}".format(core_version),
-        version = core_version[1:],
-        sdks = CORE_SDK_REPOSITORIES[core_version],
-    )
+# NOTE: .NET Core SDK registration disabled (core_download_sdk missing)
+# def core_register_sdk(core_version = CORE_DEFAULT_VERSION, name = "core_sdk"):
+#     if core_version not in CORE_SDK_REPOSITORIES:
+#         fail("Unknown core version {}".format(core_version))
+#
+#     core_download_sdk(
+#         name = name if name else "core_sdk_{}".format(core_version),
+#         version = core_version[1:],
+#         sdks = CORE_SDK_REPOSITORIES[core_version],
+#     )
 
 def mono_register_sdk():
     """See /dotnet/toolchains.rst#dostnet-register-toolchains for full documentation."""

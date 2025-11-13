@@ -20,19 +20,19 @@ load(
     _dotnet_toolchain = "dotnet_toolchain",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/binary.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:binary.bzl",
     _core_binary = "core_binary",
     _dotnet_binary = "dotnet_binary",
     _net_binary = "net_binary",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/library.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:library.bzl",
     _core_library = "core_library",
     _dotnet_library = "dotnet_library",
     _net_library = "net_library",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/vsto_addin.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:vsto_addin.bzl",
     _net_vsto_addin = "net_vsto_addin",
 )
 load(
@@ -44,34 +44,35 @@ load(
     _net_vsto_installer = "net_vsto_installer",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:libraryset.bzl",
     _core_libraryset = "core_libraryset",
     _dotnet_libraryset = "dotnet_libraryset",
     _net_libraryset = "net_libraryset",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/resx.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:resx.bzl",
     _core_resx = "core_resx",
     _dotnet_resx = "dotnet_resx",
     _net_resx = "net_resx",
     _net_resx_multi = "net_resx_multi",
 )
+# NOTE: resource_core.bzl removed/missing - commented out
+# load(
+#     "@io_bazel_rules_dotnet//dotnet/private/rules:resource_core.bzl",
+#     _core_resource = "core_resource",
+#     _core_resource_multi = "core_resource_multi",
+#     _net_resource = "net_resource",
+#     _net_resource_multi = "net_resource_multi",
+# )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/resource_core.bzl",
-    _core_resource = "core_resource",
-    _core_resource_multi = "core_resource_multi",
-    _net_resource = "net_resource",
-    _net_resource_multi = "net_resource_multi",
-)
-load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/stdlib.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:stdlib.bzl",
     _core_stdlib = "core_stdlib",
     _core_stdlib_internal = "core_stdlib_internal",
     _dotnet_stdlib = "dotnet_stdlib",
     _net_stdlib = "net_stdlib",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/test.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:test.bzl",
     _core_nunit3_test = "core_nunit3_test",
     _core_xunit_test = "core_xunit_test",
     _dotnet_nunit_test = "dotnet_nunit_test",
@@ -81,13 +82,13 @@ load(
     _net_xunit_test = "net_xunit_test",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/nuget.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:nuget.bzl",
     _dotnet_nuget = "dotnet_nuget",
     _dotnet_nuget_new = "dotnet_nuget_new",
     _nuget_package = "nuget_package",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/import.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:import.bzl",
     _core_import_binary = "core_import_binary",
     _core_import_binary_internal = "core_import_binary_internal",
     _core_import_library = "core_import_library",
@@ -97,16 +98,16 @@ load(
     _net_import_library = "net_import_library",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/com_ref.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:com_ref.bzl",
     _net_com_library = "net_com_library",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/gac_net.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:gac_net.bzl",
     _net_gac2 = "net_gac2",
     _net_gac4 = "net_gac4",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/vs_ref_net.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:vs_ref_net.bzl",
     _vs2017_ref_net = "vs2017_ref_net",
 )
 load(
@@ -148,10 +149,11 @@ core_resx = _core_resx
 dotnet_resx = _dotnet_resx
 net_resx = _net_resx
 net_resx_multi = _net_resx_multi
-core_resource = _core_resource
-net_resource = _net_resource
-net_resource_multi = _net_resource_multi
-core_resource_multi = _core_resource_multi
+# NOTE: resource_core functions disabled (file missing)
+# core_resource = _core_resource
+# net_resource = _net_resource
+# net_resource_multi = _net_resource_multi
+# core_resource_multi = _core_resource_multi
 core_stdlib = _core_stdlib
 core_stdlib_internal = _core_stdlib_internal
 dotnet_stdlib = _dotnet_stdlib

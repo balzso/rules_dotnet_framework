@@ -28,7 +28,7 @@ def _detect_wix_sdk(ctx):
     Detects WiX Toolset v5 installation.
 
     Searches in common locations:
-    1. .NET global tools: ~/.dotnet/tools/wix.exe (Windows: %USERPROFILE%\.dotnet\tools)
+    1. .NET global tools: ~/.dotnet/tools/wix.exe (Windows: %USERPROFILE%\\.dotnet\\tools)
     2. NuGet cache: ~/.nuget/packages/wix/[version]/tools/net6.0/any/wix.exe
     3. Explicit path provided via wix_register_sdk(wix_path = "...")
 
@@ -42,7 +42,7 @@ def _detect_wix_sdk(ctx):
         userprofile = ctx.os.environ.get("USERPROFILE", "")
         if userprofile:
             wix_paths.append(userprofile + "/.dotnet/tools/wix.exe")
-            wix_paths.append(userprofile + "\\.dotnet\\tools\\wix.exe")
+            wix_paths.append(userprofile + "\\\\.dotnet\\\\tools\\\\wix.exe")
     else:
         # Unix-like systems (though WiX is Windows-only, support for cross-compilation)
         home = ctx.os.environ.get("HOME", "")
@@ -56,7 +56,7 @@ def _detect_wix_sdk(ctx):
         if ctx.os.name.startswith("windows"):
             userprofile = ctx.os.environ.get("USERPROFILE", "")
             if userprofile:
-                nuget_cache = userprofile + "\\.nuget\\packages"
+                nuget_cache = userprofile + "\\\\.nuget\\\\packages"
         else:
             home = ctx.os.environ.get("HOME", "")
             if home:
@@ -68,7 +68,7 @@ def _detect_wix_sdk(ctx):
             wix_exe_path = "{}/wix/{}/tools/net6.0/any/wix.exe".format(nuget_cache, version)
             wix_paths.append(wix_exe_path)
             # Windows path variant
-            wix_exe_path_win = "{}\\wix\\{}\\tools\\net6.0\\any\\wix.exe".format(nuget_cache, version)
+            wix_exe_path_win = "{}\\\\wix\\\\{}\\\\tools\\\\net6.0\\\\any\\\\wix.exe".format(nuget_cache, version)
             wix_paths.append(wix_exe_path_win)
 
     # 3. Search for wix.exe

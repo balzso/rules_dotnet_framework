@@ -7,7 +7,7 @@ load(
     "DotnetResourceList",
 )
 load("@io_bazel_rules_dotnet//dotnet/platform:list.bzl", "DOTNET_NET_FRAMEWORKS")
-load("@io_bazel_rules_dotnet//dotnet/private:rules/versions.bzl", "parse_version")
+load("@io_bazel_rules_dotnet//dotnet/private/rules:versions.bzl", "parse_version")
 load("@io_bazel_rules_dotnet//dotnet/private/vsto:office_pias.bzl", "get_office_pia_deps", "validate_office_version")
 load("@io_bazel_rules_dotnet//dotnet/private/vsto:vsto_runtime.bzl", "VSTO_EXCEL_DEPS", "VSTO_WORD_DEPS", "VSTO_OUTLOOK_DEPS", "VSTO_POWERPOINT_DEPS")
 load("@io_bazel_rules_dotnet//dotnet/private/actions:manifest.bzl", "emit_application_manifest")

@@ -5,7 +5,7 @@ load(
     "DotnetResourceList",
 )
 load("@io_bazel_rules_dotnet//dotnet/platform:list.bzl", "DOTNET_CORE_FRAMEWORKS", "DOTNET_NETSTANDARD", "DOTNET_NET_FRAMEWORKS")
-load("@io_bazel_rules_dotnet//dotnet/private:rules/versions.bzl", "parse_version")
+load("@io_bazel_rules_dotnet//dotnet/private/rules:versions.bzl", "parse_version")
 
 def _library_impl(ctx):
     """_library_impl emits actions for compiling dotnet executable assembly."""

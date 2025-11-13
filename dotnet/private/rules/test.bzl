@@ -8,15 +8,15 @@ load(
     "DotnetResourceList",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/runfiles.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:runfiles.bzl",
     "CopyRunfiles",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:rules/data_with_dirs.bzl",
+    "@io_bazel_rules_dotnet//dotnet/private/rules:data_with_dirs.bzl",
     "CopyDataWithDirs",
 )
-load("@io_bazel_rules_dotnet//dotnet/private:rules/versions.bzl", "parse_version")
-load("@io_bazel_rules_dotnet//dotnet/private:rules/common.bzl", "collect_transitive_info")
+load("@io_bazel_rules_dotnet//dotnet/private/rules:versions.bzl", "parse_version")
+load("@io_bazel_rules_dotnet//dotnet/private/rules:common.bzl", "collect_transitive_info")
 
 def _unit_test(ctx):
     dotnet = dotnet_context(ctx)
