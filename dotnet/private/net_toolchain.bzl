@@ -32,6 +32,12 @@ def _get_dotnet_resgen(context_data):
 def _get_dotnet_tlbimp(context_data):
     return _get_dotnet_tool(context_data, "tlbimp.exe")
 
+def _get_dotnet_mage(context_data):
+    return _get_dotnet_tool(context_data, "mage.exe")
+
+def _get_dotnet_signtool(context_data):
+    return _get_dotnet_tool(context_data, "signtool.exe")
+
 def _get_dotnet_tool(context_data, name):
     for f in context_data._tools.files.to_list():
         basename = paths.basename(f.path)
@@ -67,6 +73,8 @@ def _net_toolchain_impl(ctx):
         get_dotnet_mcs = _get_dotnet_mcs,
         get_dotnet_resgen = _get_dotnet_resgen,
         get_dotnet_tlbimp = _get_dotnet_tlbimp,
+        get_dotnet_mage = _get_dotnet_mage,
+        get_dotnet_signtool = _get_dotnet_signtool,
         get_dotnet_stdlib = _get_dotnet_stdlib,
         actions = struct(
             assembly = emit_assembly_net,

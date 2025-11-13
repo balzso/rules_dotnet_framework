@@ -29,6 +29,10 @@ load(
     _net_library = "net_library",
 )
 load(
+    "@io_bazel_rules_dotnet//dotnet/private:rules/vsto_addin.bzl",
+    _net_vsto_addin = "net_vsto_addin",
+)
+load(
     "@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl",
     _core_libraryset = "core_libraryset",
     _dotnet_libraryset = "dotnet_libraryset",
@@ -120,6 +124,7 @@ net_binary = _net_binary
 core_library = _core_library
 dotnet_library = _dotnet_library
 net_library = _net_library
+net_vsto_addin = _net_vsto_addin
 core_libraryset = _core_libraryset
 dotnet_libraryset = _dotnet_libraryset
 net_libraryset = _net_libraryset

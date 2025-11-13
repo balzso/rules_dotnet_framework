@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Windows ONLY (no Mono, no cross-platform)
 - Supports net47, net471, net472 only
 - Based on d672bdb commit (Jan 2021, before Framework support was removed)
+- **NEW: VSTO (Visual Studio Tools for Office) add-in development support**
 
 ## Building and Testing
 
@@ -47,6 +48,11 @@ bazel build //tools/nuget2bazel:nuget2bazel.exe
 bazel run //tools/nuget2bazel:nuget2bazel.exe -- add -p . Newtonsoft.Json 12.0.3
 ```
 
+**Build VSTO add-in:**
+```bash
+bazel build //tests/examples/example_vsto_excel:ExampleVstoExcel.dll
+```
+
 ## Architecture
 
 ### Core Components
@@ -54,6 +60,7 @@ bazel run //tools/nuget2bazel:nuget2bazel.exe -- add -p . Newtonsoft.Json 12.0.3
 **dotnet/defs.bzl**: Main public API
 - `net_library` - Build .NET Framework class libraries
 - `net_binary` - Build .NET Framework executables
+- `net_vsto_addin` - Build VSTO (Office) add-ins
 - `net_nunit3_test`, `net_xunit_test` - Test rules
 - `net_resx`, `net_resource` - Resource handling
 - `net_gac` - GAC assembly references
@@ -67,7 +74,7 @@ bazel run //tools/nuget2bazel:nuget2bazel.exe -- add -p . Newtonsoft.Json 12.0.3
 **dotnet/private/net_toolchain.bzl**: .NET Framework toolchain
 - Locates csc.exe (C# compiler) on Windows
 - Finds .NET Framework reference assemblies
-- Provides resgen.exe, tlbimp.exe tools
+- Provides resgen.exe, tlbimp.exe, mage.exe, signtool.exe tools
 
 **dotnet/private/sdk_net.bzl**: SDK detection
 - Searches for .NET Framework SDK in standard Windows locations
@@ -285,9 +292,68 @@ net_gac(
 - Try `--spawn_strategy=standalone`
 - Some tools (tlbimp, resgen) may have sandbox issues
 
+## VSTO Development
+
+**NEW:** This fork now supports VSTO (Visual Studio Tools for Office) add-in development!
+
+### Quick Start
+
+Build a VSTO add-in:
+```python
+net_vsto_addin(
+    name = "MyExcelAddIn.dll",
+    srcs = ["ThisAddIn.cs", "Ribbon1.cs"],
+    office_app = "Excel",
+    office_version = "2016",
+    target_framework = "net472",
+    keyfile = "MyAddIn.snk",
+)
+```
+
+### VSTO Components
+
+**dotnet/private/rules/vsto_addin.bzl**: `net_vsto_addin` rule
+- Builds VSTO add-ins with automatic Office PIA and VSTO runtime dependencies
+- Supports Excel, Word, Outlook, PowerPoint
+- Generates ClickOnce manifests (.manifest, .vsto)
+- Authenticode signing support
+
+**dotnet/private/vsto/**: VSTO infrastructure
+- `vsto_runtime.bzl` - VSTO runtime detection and dependency management
+- `office_pias.bzl` - Office PIA (Primary Interop Assembly) helpers
+
+**dotnet/private/actions/**: Manifest generation and signing
+- `manifest.bzl` - Application manifest generation (mage.exe)
+- `deployment_manifest.bzl` - Deployment manifest (.vsto) generation
+- `sign.bzl` - Authenticode signing (signtool.exe)
+
+**dotnet/tools/**: VSTO tooling wrappers
+- `mage_wrapper/` - Wrapper for mage.exe (Manifest Generation Tool)
+- `signtool_wrapper/` - Wrapper for signtool.exe (Code Signing Tool)
+
+**tools/nuget_packages/vsto_packages.bzl**: Office PIA NuGet packages
+- Microsoft.Office.Interop.Excel
+- Microsoft.Office.Interop.Word
+- Microsoft.Office.Interop.Outlook
+- Microsoft.Office.Interop.PowerPoint
+
+### Requirements
+
+- **VSTO Runtime**: Visual Studio 2010 Tools for Office Runtime (installed with VS)
+- **Office PIAs**: Available via NuGet packages
+- **Windows SDK**: For mage.exe and signtool.exe tools
+- **Office Installation**: Excel, Word, Outlook, or PowerPoint for testing
+
+### Example
+
+See `tests/examples/example_vsto_excel/` for a complete Excel add-in example.
+
+Full documentation: `docs/vsto.md`
+
 ## Documentation
 
 - README.md - Quick start and overview
+- docs/vsto.md - **NEW:** VSTO development guide
 - dotnet/toolchains.rst - Toolchain configuration details
 - dotnet/providers.rst - Provider documentation
 - dotnet/core.rst - API reference (some Core content, but patterns apply)

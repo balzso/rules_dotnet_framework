@@ -12,6 +12,33 @@ def _detect_net_tools(ctx, version):
             return defpath
     fail("Failed to find .net tools " + version + " in default location " + str(defpath))
 
+def _detect_vsto_runtime(ctx):
+    """
+    Detects VSTO Runtime assemblies in Visual Studio installation.
+
+    Searches in common Visual Studio installation paths for VSTO runtime assemblies.
+    Returns the path if found, or None if not found.
+    """
+    # Common Visual Studio VSTO runtime paths
+    vsto_paths = [
+        "C:/Program Files (x86)/Microsoft Visual Studio/Shared/Visual Studio Tools for Office/PIA",
+        "C:/Program Files/Microsoft Visual Studio/Shared/Visual Studio Tools for Office/PIA",
+        "C:/Program Files (x86)/Microsoft Visual Studio 14.0/Visual Studio Tools for Office/PIA",
+        "C:/Program Files (x86)/Microsoft Visual Studio 12.0/Visual Studio Tools for Office/PIA",
+    ]
+
+    for vsto_path in vsto_paths:
+        defpath = ctx.path(vsto_path)
+        if defpath.exists:
+            # Verify that critical VSTO assemblies exist
+            test_dll = ctx.path(vsto_path + "/Microsoft.Office.Tools.Common.dll")
+            if test_dll.exists:
+                return defpath
+
+    # VSTO runtime not found - this is not a hard failure since it may be
+    # provided explicitly or via manual imports
+    return None
+
 def _net_download_sdk_impl(ctx):
     if not ctx.os.name.startswith("windows"):
         _net_empty_download_sdk_impl(ctx)
