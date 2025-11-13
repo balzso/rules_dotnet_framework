@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Supports net47, net471, net472 only
 - Based on d672bdb commit (Jan 2021, before Framework support was removed)
 - **NEW: VSTO (Visual Studio Tools for Office) add-in development support**
+- **NEW: WiX Toolset v5 integration for building Windows Installer (.msi) packages**
 
 ## Building and Testing
 
@@ -51,6 +52,11 @@ bazel run //tools/nuget2bazel:nuget2bazel.exe -- add -p . Newtonsoft.Json 12.0.3
 **Build VSTO add-in:**
 ```bash
 bazel build //tests/examples/example_vsto_excel:ExampleVstoExcel.dll
+```
+
+**Build Windows Installer (.msi):**
+```bash
+bazel build //path/to/setup:MyInstaller.msi
 ```
 
 ## Architecture
@@ -350,10 +356,135 @@ See `tests/examples/example_vsto_excel/` for a complete Excel add-in example.
 
 Full documentation: `docs/vsto.md`
 
+## WiX Toolset v5 Integration
+
+**NEW:** This fork now supports building Windows Installer packages (.msi) using WiX Toolset v5!
+
+### Quick Start
+
+Build a Windows Installer:
+```python
+net_vsto_installer(
+    name = "MyExcelAddInSetup.msi",
+    vsto_addin = ":MyExcelAddIn.dll",
+    wxs_srcs = ["Product.wxs", "Files.wxs", "Registry.wxs"],
+    arch = "x86",
+    product_version = "1.0.0",
+    upgrade_code = "YOUR-UPGRADE-CODE-GUID-HERE",  # CRITICAL: Never change!
+    manufacturer = "My Company",
+    product_name = "My Excel Add-in",
+)
+```
+
+### WiX Components
+
+**dotnet/private/sdk_wix.bzl**: WiX SDK repository rule
+- Auto-detects wix.exe from .NET global tools or NuGet cache
+- Supports explicit path override
+
+**dotnet/private/vsto_utilities.bzl**: VSTO Utilities repository rule
+- Auto-detects Visual Studio installation (2017/2019/2022)
+- Locates Microsoft.Office.Tools.*.Utilities.dll files
+- Required for VSTO installer builds
+
+**dotnet/private/wix_toolchain.bzl**: WiX toolchain infrastructure
+- Manages wix.exe tool and extensions
+
+**dotnet/private/actions/**: WiX build actions
+- `wix_stage.bzl` - File staging for WiX builds
+- `wix_build.bzl` - WiX compilation (emit_wix_package functions)
+- `sign.bzl` - MSI Authenticode signing (emit_sign_msi)
+
+**dotnet/private/rules/**: User-facing rules
+- `wix_package.bzl` - Generic WiX package rule
+- `vsto_installer.bzl` - High-level VSTO installer rule
+
+**dotnet/tools/wix_wrapper/**: Wrapper for wix.exe
+- Enables proper Bazel sandbox execution
+- Follows existing pattern (mage_wrapper, signtool_wrapper)
+
+### Requirements
+
+- **WiX Toolset v5**: Install via `dotnet tool install --global wix`
+- **Visual Studio**: With Office Developer Tools (for VSTO Utilities)
+- **Windows SDK**: For signtool.exe (Authenticode signing)
+
+### Example
+
+Complete example project: `../excel-add-in/`
+
+**VSTO Add-in** (`BUILD.bazel`):
+```python
+net_vsto_addin(
+    name = "MyExcelAddIn.dll",
+    srcs = ["ThisAddIn.cs", "Ribbon1.cs"],
+    office_app = "Excel",
+    office_version = "2016",
+    target_framework = "net472",
+)
+```
+
+**Windows Installer** (`Setup.Wix/BUILD.bazel`):
+```python
+net_vsto_installer(
+    name = "MyExcelAddInSetup.msi",
+    vsto_addin = "//:MyExcelAddIn.dll",
+    wxs_srcs = ["Product.wxs", "Files.wxs", "Registry.wxs"],
+    data = ["License.rtf"],
+    arch = "x86",
+    product_version = "1.0.0",
+    upgrade_code = "9B3C7D4B-82C9-403E-8F6C-FF77844CF4FF",
+    manufacturer = "Step Forward Partners",
+    extensions = ["WixToolset.UI.wixext"],
+    cert_file = "certificate.pfx",  # Optional signing
+)
+```
+
+**Build**:
+```bash
+# Single command builds add-in + installer
+bazel build //Setup.Wix:MyExcelAddInSetup.msi
+```
+
+### Key Features
+
+- **Automatic file staging**: Mimics MSBuild's bin\Release structure
+- **VSTO Utilities bundling**: Auto-located from Visual Studio installation
+- **Authenticode signing**: Support for PFX files and certificate store
+- **GUID preservation**: Critical for upgrade functionality
+- **WiX extensions**: Full support for WixToolset.UI.wixext, WixToolset.Util.wixext, etc.
+- **Pure Bazel**: No MSBuild or .wixproj files needed
+
+### Critical: GUID Management
+
+**UpgradeCode**: MUST remain constant across all versions. Changing it breaks upgrade functionality!
+
+```python
+upgrade_code = "9B3C7D4B-82C9-403E-8F6C-FF77844CF4FF",  # NEVER CHANGE!
+```
+
+**Component GUIDs**: Main VSTO DLL component should have explicit GUID:
+
+```xml
+<Component Id="MainDLL" Guid="91650F42-69E2-4DBC-8F83-C5EE73FC3E0E">
+  <File Id="MyAddIn.dll" Source="$(var.SourceDir)\MyAddIn.dll" KeyPath="yes" />
+</Component>
+```
+
+### WiX Source Files
+
+WiX `.wxs` files can be used without modification:
+- `$(var.SourceDir)` points to staging directory (set automatically)
+- `VsReferenceAssemblies` bindpath for VSTO Utilities (set automatically)
+- Standard WiX v5 syntax
+
+Full documentation: `docs/wix.md`
+
 ## Documentation
 
 - README.md - Quick start and overview
 - docs/vsto.md - **NEW:** VSTO development guide
+- docs/wix.md - **NEW:** WiX Toolset v5 integration guide
 - dotnet/toolchains.rst - Toolchain configuration details
 - dotnet/providers.rst - Provider documentation
 - dotnet/core.rst - API reference (some Core content, but patterns apply)
