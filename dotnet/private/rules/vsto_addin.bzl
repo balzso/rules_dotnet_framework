@@ -79,41 +79,40 @@ def _vsto_addin_impl(ctx):
 
     # Generate application manifest if requested
     if ctx.attr.generate_manifests:
-        # Note: These functions are placeholders - they need proper context integration
-        # app_manifest = emit_application_manifest(
-        #     dotnet,
-        #     name = name.replace(".dll", ""),
-        #     assembly = library.result,
-        #     deps = all_deps,
-        # )
-        # output_files.append(app_manifest)
+        # Generate application manifest (.dll.manifest)
+        app_manifest = emit_application_manifest(
+            dotnet,
+            name = name.replace(".dll", ""),
+            assembly = library.result,
+            deps = all_deps,
+        )
+        output_files.append(app_manifest)
 
         # Generate deployment manifest (.vsto)
-        # vsto_manifest = emit_deployment_manifest(
-        #     dotnet,
-        #     name = name.replace(".dll", ""),
-        #     assembly = library.result,
-        #     application_manifest = app_manifest,
-        #     install_url = ctx.attr.install_url,
-        # )
-        # output_files.append(vsto_manifest)
+        vsto_manifest = emit_deployment_manifest(
+            dotnet,
+            name = name.replace(".dll", ""),
+            assembly = library.result,
+            application_manifest = app_manifest,
+            install_url = ctx.attr.install_url,
+        )
+        output_files.append(vsto_manifest)
 
         # Sign manifests if certificate is provided
-        # if ctx.attr.signing_cert:
-        #     signed_app_manifest = emit_sign_manifest(
-        #         dotnet,
-        #         manifest = app_manifest,
-        #         cert_file = ctx.file.signing_cert,
-        #         cert_password = ctx.attr.cert_password,
-        #     )
-        #     signed_vsto_manifest = emit_sign_manifest(
-        #         dotnet,
-        #         manifest = vsto_manifest,
-        #         cert_file = ctx.file.signing_cert,
-        #         cert_password = ctx.attr.cert_password,
-        #     )
-        #     output_files.extend([signed_app_manifest, signed_vsto_manifest])
-        pass
+        if ctx.file.signing_cert:
+            signed_app_manifest = emit_sign_manifest(
+                dotnet,
+                manifest = app_manifest,
+                cert_file = ctx.file.signing_cert,
+                cert_password = ctx.attr.cert_password,
+            )
+            signed_vsto_manifest = emit_sign_manifest(
+                dotnet,
+                manifest = vsto_manifest,
+                cert_file = ctx.file.signing_cert,
+                cert_password = ctx.attr.cert_password,
+            )
+            output_files.extend([signed_app_manifest, signed_vsto_manifest])
 
     return [
         library,

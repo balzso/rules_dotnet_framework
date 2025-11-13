@@ -11,6 +11,9 @@ load(
     _dotnet_register_toolchains = "dotnet_register_toolchains",
     _mono_register_sdk = "mono_register_sdk",
     _net_register_sdk = "net_register_sdk",
+    _wix_register_sdk = "wix_register_sdk",
+    _vsto_utilities_register = "vsto_utilities_register",
+    _wix_toolchain = "wix_toolchain",
 )
 load(
     "@io_bazel_rules_dotnet//dotnet/private:dotnet_toolchain.bzl",
@@ -31,6 +34,14 @@ load(
 load(
     "@io_bazel_rules_dotnet//dotnet/private:rules/vsto_addin.bzl",
     _net_vsto_addin = "net_vsto_addin",
+)
+load(
+    "@io_bazel_rules_dotnet//dotnet/private/rules:wix_package.bzl",
+    _wix_package = "wix_package",
+)
+load(
+    "@io_bazel_rules_dotnet//dotnet/private/rules:vsto_installer.bzl",
+    _net_vsto_installer = "net_vsto_installer",
 )
 load(
     "@io_bazel_rules_dotnet//dotnet/private:rules/libraryset.bzl",
@@ -117,7 +128,10 @@ dotnet_register_toolchains = _dotnet_register_toolchains
 mono_register_sdk = _mono_register_sdk
 net_register_sdk = _net_register_sdk
 core_register_sdk = _core_register_sdk
+wix_register_sdk = _wix_register_sdk
+vsto_utilities_register = _vsto_utilities_register
 dotnet_toolchain = _dotnet_toolchain
+wix_toolchain = _wix_toolchain
 core_binary = _core_binary
 dotnet_binary = _dotnet_binary
 net_binary = _net_binary
@@ -125,6 +139,8 @@ core_library = _core_library
 dotnet_library = _dotnet_library
 net_library = _net_library
 net_vsto_addin = _net_vsto_addin
+wix_package = _wix_package
+net_vsto_installer = _net_vsto_installer
 core_libraryset = _core_libraryset
 dotnet_libraryset = _dotnet_libraryset
 net_libraryset = _net_libraryset

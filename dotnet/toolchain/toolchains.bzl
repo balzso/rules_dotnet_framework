@@ -27,6 +27,18 @@ load(
     "net_download_sdk",
 )
 load(
+    "@io_bazel_rules_dotnet//dotnet/private:sdk_wix.bzl",
+    "wix_register_sdk",
+)
+load(
+    "@io_bazel_rules_dotnet//dotnet/private:vsto_utilities.bzl",
+    "vsto_utilities_register",
+)
+load(
+    "@io_bazel_rules_dotnet//dotnet/private:wix_toolchain.bzl",
+    "wix_toolchain",
+)
+load(
     "@io_bazel_rules_dotnet//dotnet/platform:list.bzl",
     "DOTNETARCH",
     "DOTNETOS",
