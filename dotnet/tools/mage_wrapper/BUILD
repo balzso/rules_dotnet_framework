@@ -13,5 +13,6 @@ load(
     visibility = ["//visibility:public"],
     deps = [
         "@io_bazel_rules_dotnet//dotnet/stdlib.net/{}:system.dll".format(framework),
+        "@io_bazel_rules_dotnet//dotnet/stdlib.net/{}:system.core.dll".format(framework),
     ],
 ) for framework in DOTNET_NET_FRAMEWORKS]
