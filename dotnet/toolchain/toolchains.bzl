@@ -249,7 +249,10 @@ def dotnet_register_toolchains(dotnet_version = DEFAULT_VERSION, core_version = 
     """See /dotnet/toolchains.rst#dostnet-register-toolchains for full documentation."""
 
     # Use the final dictionaries to register all the toolchains
+    # NOTE: Skip .NET Core toolchains since they are disabled
     for toolchain in _toolchains:
+        if toolchain["impl"] == "core":
+            continue  # Skip .NET Core toolchains
         name = _label_prefix + toolchain["name"]
         native.register_toolchains(name)
     

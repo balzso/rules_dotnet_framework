@@ -12,8 +12,17 @@ load(
     _dotnet_register_toolchains = "dotnet_register_toolchains",
     _mono_register_sdk = "mono_register_sdk",
     _net_register_sdk = "net_register_sdk",
+)
+load(
+    "@io_bazel_rules_dotnet//dotnet/private:sdk_wix.bzl",
     _wix_register_sdk = "wix_register_sdk",
+)
+load(
+    "@io_bazel_rules_dotnet//dotnet/private:vsto_utilities.bzl",
     _vsto_utilities_register = "vsto_utilities_register",
+)
+load(
+    "@io_bazel_rules_dotnet//dotnet/private:wix_toolchain.bzl",
     _wix_toolchain = "wix_toolchain",
 )
 load(
