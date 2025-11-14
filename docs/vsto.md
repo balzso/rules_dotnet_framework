@@ -27,16 +27,28 @@ VSTO add-ins are .NET Framework assemblies that extend Microsoft Office applicat
 
 ### 1. Configure WORKSPACE
 
-Add Office PIA NuGet packages to your WORKSPACE:
+Configure your WORKSPACE to enable automatic VSTO dependency injection:
 
 ```python
-load("@rules_dotnet_framework//tools/nuget_packages:vsto_packages.bzl", "vsto_nuget_packages")
+load(
+    "@rules_dotnet_framework//dotnet:defs.bzl",
+    "dotnet_register_toolchains",
+    "dotnet_repositories_nugets",
+    "vsto_runtime_register",
+)
 
-# Register Office Primary Interop Assemblies
-vsto_nuget_packages()
+# 1. Register .NET toolchains
+dotnet_register_toolchains()
+
+# 2. Register NuGet repositories (includes Office PIAs)
+dotnet_repositories_nugets()
+
+# 3. Register VSTO Runtime
+# Auto-detects VSTO runtime DLLs from Visual Studio or GAC
+vsto_runtime_register(name = "vsto_runtime")
 ```
 
-The VSTO runtime assemblies will be automatically detected from your Visual Studio installation.
+**That's it!** The automatic injection system will handle all VSTO and Office PIA dependencies. You don't need to manually add NuGet packages or reference VSTO runtime assemblies.
 
 ### 2. Create Your Add-in
 
@@ -75,7 +87,7 @@ namespace MyExcelAddIn
 
 ### 3. Create BUILD File
 
-**BUILD:**
+**BUILD.bazel:**
 ```python
 load("@rules_dotnet_framework//dotnet:defs.bzl", "net_vsto_addin")
 
@@ -90,11 +102,18 @@ net_vsto_addin(
     target_framework = "net472",
     keyfile = "MyAddIn.snk",  # Optional: strong name signing
     deps = [
-        "@microsoft.office.interop.excel//:lib",
-        # VSTO runtime deps added automatically
+        # Office PIA and VSTO runtime dependencies are injected automatically!
+        # Only add your custom dependencies here (e.g., NuGet packages, other libraries)
     ],
 )
 ```
+
+**Note:** The `office_app = "Excel"` attribute triggers automatic injection of:
+- Excel Primary Interop Assembly (PIA)
+- 8 VSTO runtime assemblies (interface + implementation DLLs)
+- Standard .NET Framework libraries
+
+No need to manually list VSTO dependencies! 🚀
 
 ### 4. Build
 
@@ -136,30 +155,62 @@ The `net_vsto_addin` rule builds VSTO add-ins with automatic configuration for O
 
 ### Automatic Dependencies
 
-The `net_vsto_addin` rule automatically adds dependencies based on `office_app`:
+⚡ **The `net_vsto_addin` rule automatically injects all required VSTO and Office PIA dependencies** based on the `office_app` attribute. You don't need to manually specify these in the `deps` list!
+
+#### How It Works
+
+The automatic injection system uses **private attributes** in the `net_vsto_addin` rule to automatically add the correct dependencies:
+
+1. **Office PIA (Primary Interop Assemblies)** - Registered via `dotnet_repositories_nugets()`
+2. **VSTO Runtime Assemblies** - Registered via `vsto_runtime_register()`
+3. **Implementation DLLs** - Automatically discovered from Visual Studio or Windows GAC
+
+#### Injected Dependencies by Office Application
 
 **Excel:**
-- `Microsoft.Office.Interop.Excel` (PIA)
-- `Microsoft.Office.Tools.Excel` (VSTO)
-- `Microsoft.Office.Tools.Excel.v4.0.Utilities`
-- `Microsoft.Office.Tools.Common`
-- `Microsoft.Office.Tools.v4.0.Framework`
-- `Microsoft.Office.Tools`
-- `Microsoft.VisualStudio.Tools.Applications.Runtime`
+- `@microsoft.office.interop.excel//:net` (PIA)
+- `@vsto_runtime//:Microsoft.Office.Tools.Common`
+- `@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation`
+- `@vsto_runtime//:Microsoft.Office.Tools.Excel`
+- `@vsto_runtime//:Microsoft.Office.Tools.Excel.Implementation`
+- `@vsto_runtime//:Microsoft.Office.Tools.Excel.v4.0.Utilities`
+- `@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework`
+- `@vsto_runtime//:Microsoft.Office.Tools`
+- `@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime`
 
 **Word:**
-- `Microsoft.Office.Interop.Word` (PIA)
-- `Microsoft.Office.Tools.Word` (VSTO)
-- Plus common VSTO assemblies
+- `@microsoft.office.interop.word//:net` (PIA)
+- `@vsto_runtime//:Microsoft.Office.Tools.Common`
+- `@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation`
+- `@vsto_runtime//:Microsoft.Office.Tools.Word`
+- `@vsto_runtime//:Microsoft.Office.Tools.Word.Implementation`
+- Plus common VSTO runtime assemblies
 
 **Outlook:**
-- `Microsoft.Office.Interop.Outlook` (PIA)
-- `Microsoft.Office.Tools.Outlook` (VSTO)
-- Plus common VSTO assemblies
+- `@microsoft.office.interop.outlook//:net` (PIA)
+- `@vsto_runtime//:Microsoft.Office.Tools.Common`
+- `@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation`
+- `@vsto_runtime//:Microsoft.Office.Tools.Outlook`
+- `@vsto_runtime//:Microsoft.Office.Tools.Outlook.Implementation`
+- Plus common VSTO runtime assemblies
 
 **PowerPoint:**
-- `Microsoft.Office.Interop.PowerPoint` (PIA)
-- Plus common VSTO assemblies
+- `@microsoft.office.interop.powerpoint//:net` (PIA)
+- Plus common VSTO runtime assemblies (no application-specific DLLs)
+
+#### VSTO Runtime Detection
+
+The `vsto_runtime_register()` repository rule automatically detects VSTO runtime DLLs from:
+
+1. **Visual Studio installation** - Searches in `Common7/IDE/ReferenceAssemblies/v4.0/` and `Common7/IDE/PublicAssemblies/`
+2. **Windows GAC** (fallback) - Searches in `C:/Windows/Microsoft.NET/assembly/GAC_MSIL/` for `.Implementation` DLLs
+
+**Example:** When you specify `office_app = "Excel"`, the build system automatically:
+- Adds the Excel PIA from NuGet
+- Adds 8 VSTO runtime assemblies (interface + implementation DLLs)
+- Adds standard library dependencies (mscorlib, System.dll, etc.)
+
+**No manual dependency management required!** ✨
 
 ## VSTO Project Structure
 
@@ -372,6 +423,136 @@ Cache data in documents using the `[Cached]` attribute (document-level customiza
 4. Look for errors in Event Viewer (Application log)
 5. Enable VSTO logging: `VSTO_LOGALERTS=1`, `VSTO_SUPPRESSDISPLAYALERTS=0`
 
+## Automatic Dependency Injection Architecture
+
+### Overview
+
+The automatic dependency injection system eliminates the need to manually specify VSTO and Office PIA dependencies in your BUILD files. This is achieved through a combination of repository rules, private attributes, and runtime detection.
+
+### Implementation Details
+
+#### 1. Repository Rules
+
+**`vsto_runtime_register`** (in `dotnet/private/vsto/vsto_runtime.bzl`)
+- Auto-detects VSTO runtime DLLs from Visual Studio installation or Windows GAC
+- Creates a `@vsto_runtime` repository with `net_import_library` targets
+- Searches locations:
+  - Visual Studio: `Common7/IDE/ReferenceAssemblies/v4.0/`
+  - Visual Studio: `Common7/IDE/PublicAssemblies/`
+  - Windows GAC: `C:/Windows/Microsoft.NET/assembly/GAC_MSIL/`
+- Handles both interface DLLs and `.Implementation` DLLs (fallback to GAC)
+
+**`dotnet_repositories_nugets`** (in `dotnet/private/nugets.bzl`)
+- Registers Office PIA NuGet packages:
+  - `@microsoft.office.interop.excel`
+  - `@microsoft.office.interop.word`
+  - `@microsoft.office.interop.outlook`
+  - `@microsoft.office.interop.powerpoint`
+- Uses `dotnet_nuget_new` to create `net_import_library` targets with `:net` suffix
+
+#### 2. Private Attributes in `net_vsto_addin`
+
+The `net_vsto_addin` rule (in `dotnet/private/rules/vsto_addin.bzl`) defines private attributes for each Office application:
+
+```python
+# Office PIA dependencies (from NuGet)
+"_pia_excel_deps": attr.label_list(
+    default = [Label("@microsoft.office.interop.excel//:net")],
+    providers = [DotnetLibrary],
+)
+
+# VSTO runtime dependencies (from vsto_runtime repository)
+"_vsto_excel_deps": attr.label_list(
+    default = [
+        Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
+        Label("@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation"),
+        Label("@vsto_runtime//:Microsoft.Office.Tools.Excel"),
+        Label("@vsto_runtime//:Microsoft.Office.Tools.Excel.Implementation"),
+        # ... more assemblies
+    ],
+    providers = [DotnetLibrary],
+)
+```
+
+Similar attributes exist for Word, Outlook, and PowerPoint.
+
+#### 3. Dependency Injection Logic
+
+In the `_vsto_addin_impl` function:
+
+```python
+# Get Office PIA dependencies based on office_app
+pia_deps = []
+if ctx.attr.office_app == "Excel":
+    pia_deps = ctx.attr._pia_excel_deps
+elif ctx.attr.office_app == "Word":
+    pia_deps = ctx.attr._pia_word_deps
+# ... other apps
+
+# Get VSTO runtime dependencies based on office_app
+vsto_deps = []
+if ctx.attr.office_app == "Excel":
+    vsto_deps = ctx.attr._vsto_excel_deps
+elif ctx.attr.office_app == "Word":
+    vsto_deps = ctx.attr._vsto_word_deps
+# ... other apps
+
+# Combine user deps with automatic VSTO/PIA deps + stdlib
+all_deps = ctx.attr.deps + pia_deps + vsto_deps + ctx.attr._stdlib
+```
+
+The combined dependencies are then passed to the .NET compiler via the `dotnet.assembly()` provider.
+
+### Benefits
+
+✅ **Zero manual configuration** - No need to list VSTO/PIA dependencies in BUILD files
+✅ **Environment portability** - Works on any machine with Visual Studio or VS Build Tools
+✅ **Automatic version detection** - Uses the VSTO runtime version installed on the system
+✅ **GAC fallback** - `.Implementation` DLLs loaded from GAC if not in VS directories
+✅ **Type safety** - Bazel validates all dependencies at analysis time
+
+### Verification
+
+To verify automatic injection is working, check the compiler parameters:
+
+```bash
+# Build your add-in
+bazel build //:MyAddIn.dll
+
+# Check compiler parameters file
+cat bazel-bin/MyAddIn.dll.param | grep "vsto_runtime"
+```
+
+You should see all VSTO runtime DLLs listed in the `/r:` references, even though they're not in your `deps` list!
+
+### Troubleshooting Injection
+
+**Issue:** Build fails with "Could not find @vsto_runtime//..."
+
+**Solution:**
+1. Verify Visual Studio is installed with Office Developer Tools
+2. Check VSTO runtime DLLs exist in VS installation:
+   ```powershell
+   Get-ChildItem "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\ReferenceAssemblies\v4.0\" -Filter "Microsoft.Office.Tools*.dll"
+   ```
+3. Manually specify VSTO runtime path in WORKSPACE:
+   ```python
+   vsto_runtime_register(
+       name = "vsto_runtime",
+       runtime_path = "C:/path/to/vsto/runtime",
+   )
+   ```
+
+**Issue:** Compilation errors for VSTO types (e.g., "AddInBase not found")
+
+**Solution:**
+- The `.Implementation` DLLs may be missing
+- Check GAC contains implementation DLLs:
+  ```powershell
+  Get-ChildItem "C:\Windows\Microsoft.NET\assembly\GAC_MSIL" -Recurse -Filter "*Office.Tools*.Implementation.dll"
+  ```
+- Ensure `vsto_runtime_register` GAC fallback is working (check repository rule implementation)
+
 ## Examples
 
 See `tests/examples/example_vsto_excel/` for a complete working example.
@@ -381,3 +562,5 @@ See `tests/examples/example_vsto_excel/` for a complete working example.
 - [VSTO Overview - Microsoft Learn](https://learn.microsoft.com/en-us/visualstudio/vsto/visual-studio-tools-for-office-runtime-overview)
 - [Office Primary Interop Assemblies](https://learn.microsoft.com/en-us/visualstudio/vsto/office-primary-interop-assemblies)
 - [ClickOnce Deployment for Office Solutions](https://learn.microsoft.com/en-us/visualstudio/vsto/deploying-an-office-solution-by-using-clickonce)
+- [Bazel Rule Attributes](https://bazel.build/rules/lib/attr)
+- [Bazel Repository Rules](https://bazel.build/extending/repo)
