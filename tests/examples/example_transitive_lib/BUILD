@@ -1,4 +1,4 @@
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "DOTNET_CORE_FRAMEWORKS", "DOTNET_NET_FRAMEWORKS", "core_library", "dotnet_library", "net_library")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "DOTNET_CORE_FRAMEWORKS", "DOTNET_NET_FRAMEWORKS", "core_library", "dotnet_library", "net_library")
 
 dotnet_library(
     name = "TransitiveClass.dll",
@@ -9,7 +9,7 @@ dotnet_library(
     nowarn = ["CS0618"],
     visibility = ["//visibility:public"],
     deps = [
-        "@io_bazel_rules_dotnet//dotnet/stdlib:system.dll",
+        "@rules_dotnet_framework//dotnet/stdlib:system.dll",
     ],
 )
 
@@ -18,14 +18,14 @@ dotnet_library(
     srcs = [
         "TransitiveClass.cs",
     ],
-    dotnet_context_data = "@io_bazel_rules_dotnet//:core_context_data_{}".format(framework),
+    dotnet_context_data = "@rules_dotnet_framework//:core_context_data_{}".format(framework),
     nowarn = [
         "CS0618",
         "CS0612",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "@io_bazel_rules_dotnet//dotnet/stdlib.core/{}:libraryset".format(framework),
+        "@rules_dotnet_framework//dotnet/stdlib.core/{}:libraryset".format(framework),
     ],
 ) for framework in DOTNET_CORE_FRAMEWORKS]
 
@@ -34,11 +34,11 @@ dotnet_library(
     srcs = [
         "TransitiveClass.cs",
     ],
-    dotnet_context_data = "@io_bazel_rules_dotnet//:net_context_data_{}".format(framework),
+    dotnet_context_data = "@rules_dotnet_framework//:net_context_data_{}".format(framework),
     nowarn = ["CS0618"],
     visibility = ["//visibility:public"],
     deps = [
-        "@io_bazel_rules_dotnet//dotnet/stdlib.net:system.dll",
+        "@rules_dotnet_framework//dotnet/stdlib.net:system.dll",
     ],
 ) for framework in DOTNET_NET_FRAMEWORKS]
 
@@ -50,7 +50,7 @@ core_library(
     target_framework = "netstandard2.0",
     visibility = ["//visibility:public"],
     deps = [
-        "@io_bazel_rules_dotnet//dotnet/stdlib.core:NETStandard.Library",
+        "@rules_dotnet_framework//dotnet/stdlib.core:NETStandard.Library",
     ],
 )
 
@@ -62,6 +62,6 @@ core_library(
     target_framework = "netstandard2.0",
     visibility = ["//visibility:public"],
     deps = [
-        "@io_bazel_rules_dotnet//dotnet/stdlib.core/v2.1.200:netstandard.dll",
+        "@rules_dotnet_framework//dotnet/stdlib.core/v2.1.200:netstandard.dll",
     ],
 )

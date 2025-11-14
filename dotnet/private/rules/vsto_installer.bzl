@@ -1,11 +1,11 @@
 """High-level rule for building VSTO add-in installers"""
 
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:providers.bzl",
+    "@rules_dotnet_framework//dotnet/private:providers.bzl",
     "DotnetLibrary",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private/rules:wix_package.bzl",
+    "@rules_dotnet_framework//dotnet/private/rules:wix_package.bzl",
     "wix_package",
 )
 

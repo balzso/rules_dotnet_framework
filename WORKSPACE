@@ -1,11 +1,11 @@
-workspace(name = "io_bazel_rules_dotnet")
+workspace(name = "rules_dotnet_framework")
 
-load("@io_bazel_rules_dotnet//dotnet:deps.bzl", "dotnet_repositories")
+load("@rules_dotnet_framework//dotnet:deps.bzl", "dotnet_repositories")
 
 dotnet_repositories()
 
 load(
-    "@io_bazel_rules_dotnet//dotnet:defs.bzl",
+    "@rules_dotnet_framework//dotnet:defs.bzl",
     "DOTNET_CORE_FRAMEWORKS",
     "DOTNET_NET_FRAMEWORKS",
     "core_register_sdk",
@@ -47,7 +47,7 @@ net_gac4(
 # The rule is left as an example. It is commented out, because our CI server doesn't have VS2017 installed
 # vs2017_ref_net(name = "vs2017_ref")
 
-load("@io_bazel_rules_dotnet//tests:bazel_tests.bzl", "test_environment")
+load("@rules_dotnet_framework//tests:bazel_tests.bzl", "test_environment")
 
 test_environment()
 

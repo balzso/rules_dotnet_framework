@@ -30,7 +30,7 @@ VSTO add-ins are .NET Framework assemblies that extend Microsoft Office applicat
 Add Office PIA NuGet packages to your WORKSPACE:
 
 ```python
-load("@io_bazel_rules_dotnet//tools/nuget_packages:vsto_packages.bzl", "vsto_nuget_packages")
+load("@rules_dotnet_framework//tools/nuget_packages:vsto_packages.bzl", "vsto_nuget_packages")
 
 # Register Office Primary Interop Assemblies
 vsto_nuget_packages()
@@ -77,7 +77,7 @@ namespace MyExcelAddIn
 
 **BUILD:**
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_vsto_addin")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_vsto_addin")
 
 net_vsto_addin(
     name = "MyExcelAddIn.dll",

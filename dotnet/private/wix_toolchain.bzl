@@ -130,5 +130,5 @@ def wix_toolchain(name, extensions = {}, **kwargs):
     native.toolchain(
         name = name,
         toolchain = ":" + impl_name,
-        toolchain_type = "@io_bazel_rules_dotnet//dotnet:wix_toolchain_type",
+        toolchain_type = "@rules_dotnet_framework//dotnet:wix_toolchain_type",
     )

@@ -50,16 +50,16 @@ This is a fork of [rules_dotnet](https://github.com/bazelbuild/rules_dotnet) spe
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 git_repository(
-    name = "io_bazel_rules_dotnet",
-    remote = "https://github.com/YOUR_USERNAME/rules_dotnet_framework",
-    branch = "master",
+    name = "rules_dotnet_framework",
+    remote = "https://github.com/balzso/rules_dotnet_framework.git",
+    branch = "main",
 )
 
-load("@io_bazel_rules_dotnet//dotnet:deps.bzl", "dotnet_repositories")
+load("@rules_dotnet_framework//dotnet:deps.bzl", "dotnet_repositories")
 dotnet_repositories()
 
 load(
-    "@io_bazel_rules_dotnet//dotnet:defs.bzl",
+    "@rules_dotnet_framework//dotnet:defs.bzl",
     "dotnet_register_toolchains",
     "dotnet_repositories_nugets",
     "net_register_sdk",
@@ -78,7 +78,7 @@ dotnet_repositories_nugets()
 ### 2. Create a BUILD file
 
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_library", "net_binary")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_library", "net_binary")
 
 net_library(
     name = "MyLibrary.dll",

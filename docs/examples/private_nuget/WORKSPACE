@@ -1,16 +1,16 @@
 workspace(name = "ef")
 
 local_repository(
-    name = "io_bazel_rules_dotnet",
+    name = "rules_dotnet_framework",
     path = "../../..",
 )
 
-load("@io_bazel_rules_dotnet//dotnet:deps.bzl", "dotnet_repositories")
+load("@rules_dotnet_framework//dotnet:deps.bzl", "dotnet_repositories")
 
 dotnet_repositories()
 
 load(
-    "@io_bazel_rules_dotnet//dotnet:defs.bzl",
+    "@rules_dotnet_framework//dotnet:defs.bzl",
     "core_register_sdk",
     "dotnet_register_toolchains",
     "dotnet_repositories_nugets",

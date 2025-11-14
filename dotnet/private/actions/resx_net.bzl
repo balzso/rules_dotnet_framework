@@ -1,5 +1,5 @@
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:providers.bzl",
+    "@rules_dotnet_framework//dotnet/private:providers.bzl",
     "DotnetLibrary",
 )
 

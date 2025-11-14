@@ -136,7 +136,7 @@ Example
         sha256 = "fa3e0cfbb2caa9946d2ce3d8174031a06320aad2c9e69a60f7739b9ddf19f172",
         build_file_content = """
     package(default_visibility = [ "//visibility:public" ])
-    load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_import_library")
+    load("@rules_dotnet_framework//dotnet:defs.bzl", "net_import_library")
 
     net_import_library(
         name = "npgsqllib",
@@ -208,9 +208,9 @@ Example
         sha256 = "17e5e4c8c06d59f150b1e1ab9098a3eaa261c787fabc118e1882bdad32511c90",
         net_lib = "lib/net45/Newtonsoft.Json.dll",
         net_deps = [
-            "@io_bazel_rules_dotnet//dotnet/stdlib.net/net472:System.dll",
-            "@io_bazel_rules_dotnet//dotnet/stdlib.net/net472:System.Core.dll",
-            "@io_bazel_rules_dotnet//dotnet/stdlib.net/net472:System.Xml.dll",
+            "@rules_dotnet_framework//dotnet/stdlib.net/net472:System.dll",
+            "@rules_dotnet_framework//dotnet/stdlib.net/net472:System.Core.dll",
+            "@rules_dotnet_framework//dotnet/stdlib.net/net472:System.Xml.dll",
         ],
         net_files = [
             "lib/net45/Newtonsoft.Json.dll",

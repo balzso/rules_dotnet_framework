@@ -126,7 +126,7 @@ Generic rule for building Windows Installer packages from WiX source files.
 
 .. code:: python
 
-  load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "wix_package", "net_library")
+  load("@rules_dotnet_framework//dotnet:defs.bzl", "wix_package", "net_library")
 
   net_library(
       name = "MyApp.dll",
@@ -229,7 +229,7 @@ This rule automatically handles VSTO-specific requirements like bundling VSTO Ut
 
 .. code:: python
 
-  load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_vsto_addin", "net_vsto_installer")
+  load("@rules_dotnet_framework//dotnet:defs.bzl", "net_vsto_addin", "net_vsto_installer")
 
   net_vsto_addin(
       name = "MyExcelAddIn.dll",

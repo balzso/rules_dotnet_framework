@@ -31,7 +31,7 @@ Before building, ensure your `WORKSPACE` file includes:
 
 1. **Office PIA NuGet packages**:
    ```python
-   load("@io_bazel_rules_dotnet//tools/nuget_packages:vsto_packages.bzl", "vsto_nuget_packages")
+   load("@rules_dotnet_framework//tools/nuget_packages:vsto_packages.bzl", "vsto_nuget_packages")
    vsto_nuget_packages()
    ```
 

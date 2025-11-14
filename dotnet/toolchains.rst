@@ -55,7 +55,7 @@ the following toolchain labels (along with others) will be available:
 
   .. code:: python
 
-    @io_bazel_rules_dotnet//dotnet/toolchain:net_windows_amd64
+    @rules_dotnet_framework//dotnet/toolchain:net_windows_amd64
 
 The toolchains are not usable until you register them.
 
@@ -87,15 +87,15 @@ First, you have to declare that you want to consume the toolchain in the rule de
 
 .. code:: python
 
-  load("@io_bazel_rules_dotnet//dotnet:def.bzl", "dotnet_context")
+  load("@rules_dotnet_framework//dotnet:def.bzl", "dotnet_context")
 
   my_rule = rule(
       _my_rule_impl,
       attrs = {
           ...
-         "dotnet_context_data": attr.label(default = Label("@io_bazel_rules_dotnet//:net_context_data"))
+         "dotnet_context_data": attr.label(default = Label("@rules_dotnet_framework//:net_context_data"))
      },
-     toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_net"],
+     toolchains = ["@rules_dotnet_framework//dotnet:toolchain_type_net"],
  )
 
 And then in the rule body, you need to get the toolchain itself and use its action generators:
@@ -151,7 +151,7 @@ Example
 
 .. code:: python
 
-  load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_register_sdk", "dotnet_register_toolchains")
+  load("@rules_dotnet_framework//dotnet:defs.bzl", "net_register_sdk", "dotnet_register_toolchains")
 
   # Register .NET Framework 4.7.2 SDK
   net_register_sdk(net_version = "net472")
@@ -217,9 +217,9 @@ the dotnet context data as an attribute.
       _my_rule_impl,
       attrs = {
           ...
-        "dotnet_context_data": attr.label(default = Label("@io_bazel_rules_dotnet//:net_context_data"))
+        "dotnet_context_data": attr.label(default = Label("@rules_dotnet_framework//:net_context_data"))
       },
-      toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_net"],
+      toolchains = ["@rules_dotnet_framework//dotnet:toolchain_type_net"],
   )
 
 +--------------------------------+-----------------------------+-----------------------------------+

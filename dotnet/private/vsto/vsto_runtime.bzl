@@ -1,7 +1,7 @@
 """VSTO Runtime detection and import infrastructure"""
 
 # NOTE: Import directly from source to avoid circular dependency with defs.bzl
-load("@io_bazel_rules_dotnet//dotnet/private/rules:import.bzl", "net_import_library")
+load("@rules_dotnet_framework//dotnet/private/rules:import.bzl", "net_import_library")
 
 def _find_vsto_runtime_path():
     """

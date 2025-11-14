@@ -1,18 +1,18 @@
 """Rule for building VSTO (Visual Studio Tools for Office) add-ins"""
 
-load("@io_bazel_rules_dotnet//dotnet/private:context.bzl", "dotnet_context")
+load("@rules_dotnet_framework//dotnet/private:context.bzl", "dotnet_context")
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:providers.bzl",
+    "@rules_dotnet_framework//dotnet/private:providers.bzl",
     "DotnetLibrary",
     "DotnetResourceList",
 )
-load("@io_bazel_rules_dotnet//dotnet/platform:list.bzl", "DOTNET_NET_FRAMEWORKS")
-load("@io_bazel_rules_dotnet//dotnet/private/rules:versions.bzl", "parse_version")
-load("@io_bazel_rules_dotnet//dotnet/private/vsto:office_pias.bzl", "get_office_pia_deps", "validate_office_version")
-load("@io_bazel_rules_dotnet//dotnet/private/vsto:vsto_runtime.bzl", "VSTO_EXCEL_DEPS", "VSTO_WORD_DEPS", "VSTO_OUTLOOK_DEPS", "VSTO_POWERPOINT_DEPS")
-load("@io_bazel_rules_dotnet//dotnet/private/actions:manifest.bzl", "emit_application_manifest")
-load("@io_bazel_rules_dotnet//dotnet/private/actions:deployment_manifest.bzl", "emit_deployment_manifest")
-load("@io_bazel_rules_dotnet//dotnet/private/actions:sign.bzl", "emit_sign_manifest")
+load("@rules_dotnet_framework//dotnet/platform:list.bzl", "DOTNET_NET_FRAMEWORKS")
+load("@rules_dotnet_framework//dotnet/private/rules:versions.bzl", "parse_version")
+load("@rules_dotnet_framework//dotnet/private/vsto:office_pias.bzl", "get_office_pia_deps", "validate_office_version")
+load("@rules_dotnet_framework//dotnet/private/vsto:vsto_runtime.bzl", "VSTO_EXCEL_DEPS", "VSTO_WORD_DEPS", "VSTO_OUTLOOK_DEPS", "VSTO_POWERPOINT_DEPS")
+load("@rules_dotnet_framework//dotnet/private/actions:manifest.bzl", "emit_application_manifest")
+load("@rules_dotnet_framework//dotnet/private/actions:deployment_manifest.bzl", "emit_deployment_manifest")
+load("@rules_dotnet_framework//dotnet/private/actions:sign.bzl", "emit_sign_manifest")
 
 def _get_vsto_deps(office_app):
     """Returns VSTO runtime dependencies for the specified Office application"""
@@ -142,7 +142,7 @@ net_vsto_addin = rule(
         "unsafe": attr.bool(default = False),
         "data": attr.label_list(allow_files = True),
         "keyfile": attr.label(allow_files = True),
-        "dotnet_context_data": attr.label(default = Label("@io_bazel_rules_dotnet//:net_context_data")),
+        "dotnet_context_data": attr.label(default = Label("@rules_dotnet_framework//:net_context_data")),
         "target_framework": attr.string(
             values = DOTNET_NET_FRAMEWORKS.keys() + [""],
             default = "net472",  # Default to .NET Framework 4.7.2 for VSTO
@@ -179,7 +179,7 @@ net_vsto_addin = rule(
             doc = "Optional mage_wrapper tool (auto-selected based on target_framework if not specified)",
         ),
     },
-    toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_net"],
+    toolchains = ["@rules_dotnet_framework//dotnet:toolchain_type_net"],
     executable = False,
     doc = """
 Builds a VSTO (Visual Studio Tools for Office) add-in.

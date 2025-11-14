@@ -119,7 +119,7 @@ This repository rule detects the wix.exe tool and makes it available to Bazel bu
 
 Example usage in WORKSPACE:
 
-    load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "wix_register_sdk")
+    load("@rules_dotnet_framework//dotnet:defs.bzl", "wix_register_sdk")
 
     wix_register_sdk(name = "wix_sdk")
 

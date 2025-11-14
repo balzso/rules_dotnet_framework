@@ -136,7 +136,7 @@ not included in the add-in's build output (Private=False in .csproj).
 
 Example usage in WORKSPACE:
 
-    load("@io_bazel_rules_dotnet//dotnet/toolchain:toolchains.bzl", "vsto_utilities_register")
+    load("@rules_dotnet_framework//dotnet/toolchain:toolchains.bzl", "vsto_utilities_register")
 
     vsto_utilities_register(name = "vsto_utilities")
 

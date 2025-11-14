@@ -41,7 +41,7 @@ For advanced scenarios where you need explicit control:
         srcs = [
             "MyClass.cs",
         ],
-        dotnet_context_data = "@io_bazel_rules_dotnet//:net_context_data_net472",
+        dotnet_context_data = "@rules_dotnet_framework//:net_context_data_net472",
     )
 
 Available Frameworks
@@ -68,7 +68,7 @@ In WORKSPACE:
 
 .. code:: python
 
-    load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_register_sdk", "DOTNET_NET_FRAMEWORKS")
+    load("@rules_dotnet_framework//dotnet:defs.bzl", "net_register_sdk", "DOTNET_NET_FRAMEWORKS")
 
     [net_register_sdk(
         net_version = framework
@@ -78,7 +78,7 @@ In BUILD.bazel:
 
 .. code:: python
 
-    load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "DOTNET_NET_FRAMEWORKS", "net_library")
+    load("@rules_dotnet_framework//dotnet:defs.bzl", "DOTNET_NET_FRAMEWORKS", "net_library")
 
     [net_library(
         name = "MyLib-{}.dll".format(framework),
@@ -103,7 +103,7 @@ In ``defs.bzl``:
 
 .. code:: python
 
-    load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_library")
+    load("@rules_dotnet_framework//dotnet:defs.bzl", "net_library")
 
     def multi_framework_library(name, srcs, deps = [], **kwargs):
         """Generates a library for each supported framework version."""
@@ -146,7 +146,7 @@ for a complete working example.
 
 .. code:: python
 
-    load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "DOTNET_NET_FRAMEWORKS", "net_library")
+    load("@rules_dotnet_framework//dotnet:defs.bzl", "DOTNET_NET_FRAMEWORKS", "net_library")
 
     # Base library
     [net_library(

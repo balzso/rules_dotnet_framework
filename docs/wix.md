@@ -34,7 +34,7 @@ The `rules_dotnet_framework` ruleset provides full integration with WiX Toolset 
 ### 1. Configure WORKSPACE
 
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl",
+load("@rules_dotnet_framework//dotnet:defs.bzl",
      "net_register_sdk",
      "wix_register_sdk",
      "vsto_utilities_register",
@@ -57,7 +57,7 @@ dotnet_register_toolchains()
 
 ```python
 # BUILD.bazel
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_vsto_addin")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_vsto_addin")
 
 net_vsto_addin(
     name = "MyExcelAddIn.dll",
@@ -73,7 +73,7 @@ net_vsto_addin(
 
 ```python
 # setup/BUILD.bazel
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_vsto_installer")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_vsto_installer")
 
 net_vsto_installer(
     name = "MyExcelAddInSetup.msi",

@@ -1,4 +1,4 @@
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_xunit_test")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "core_xunit_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -7,8 +7,8 @@ core_xunit_test(
     srcs = glob(["**/*.cs"]),
     nowarn = ["CS1701"],
     deps = [
-        "@io_bazel_rules_dotnet//dotnet/stdlib.core:Microsoft.AspNetCore.App",
-        "@io_bazel_rules_dotnet//dotnet/stdlib.core:libraryset",
+        "@rules_dotnet_framework//dotnet/stdlib.core:Microsoft.AspNetCore.App",
+        "@rules_dotnet_framework//dotnet/stdlib.core:libraryset",
         "@microsoft.entityframeworkcore//:core",
         "@xunit.assert//:core",
         "@xunit.extensibility.core//:core",

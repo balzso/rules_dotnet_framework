@@ -1,4 +1,4 @@
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_vsto_addin")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_vsto_addin")
 
 # Example VSTO Excel Add-in
 #

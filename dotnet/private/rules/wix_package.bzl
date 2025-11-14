@@ -1,23 +1,23 @@
 """WiX package rule for building Windows Installer (.msi) packages"""
 
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:context.bzl",
+    "@rules_dotnet_framework//dotnet/private:context.bzl",
     "dotnet_context",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:providers.bzl",
+    "@rules_dotnet_framework//dotnet/private:providers.bzl",
     "DotnetLibrary",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private/actions:wix_stage.bzl",
+    "@rules_dotnet_framework//dotnet/private/actions:wix_stage.bzl",
     "stage_vsto_files_for_wix_windows",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private/actions:wix_build.bzl",
+    "@rules_dotnet_framework//dotnet/private/actions:wix_build.bzl",
     "emit_wix_package_with_wrapper",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private/actions:sign.bzl",
+    "@rules_dotnet_framework//dotnet/private/actions:sign.bzl",
     "emit_sign_msi",
 )
 
@@ -202,11 +202,11 @@ wix_package = rule(
             doc = "WiX tool (wix.exe) from SDK",
         ),
         "_wix_wrapper": attr.label(
-            default = "@io_bazel_rules_dotnet//dotnet/tools/wix_wrapper:wix_wrapper_net472.exe",
+            default = "@rules_dotnet_framework//dotnet/tools/wix_wrapper:wix_wrapper_net472.exe",
             executable = True,
             cfg = "exec",
             doc = "WiX wrapper executable",
         ),
     },
-    toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type"],
+    toolchains = ["@rules_dotnet_framework//dotnet:toolchain_type"],
 )

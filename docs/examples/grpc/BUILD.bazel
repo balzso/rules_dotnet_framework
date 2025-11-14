@@ -1,4 +1,4 @@
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_library", "net_xunit_test")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_library", "net_xunit_test")
 load("@rules_proto_grpc//csharp:defs.bzl", "csharp_grpc_compile")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
@@ -22,7 +22,7 @@ net_library(
         "@google.protobuf//:net",
         "@grpc.core.api//:net",
         "@grpc.core//:net",
-        "@io_bazel_rules_dotnet//dotnet/stdlib.net:system.io.dll",
+        "@rules_dotnet_framework//dotnet/stdlib.net:system.io.dll",
         "@system.interactive.async//:net",
     ],
 )
@@ -51,7 +51,7 @@ net_xunit_test(
         ":service_proto.dll",
         "@grpc.core//:net",
         "@grpc.healthcheck//:net",
-        "@io_bazel_rules_dotnet//dotnet/stdlib.net:system.runtime.dll",
+        "@rules_dotnet_framework//dotnet/stdlib.net:system.runtime.dll",
         "@xunit.assert//:net",
         "@xunit.extensibility.core//:net",
         "@xunit.extensibility.execution//:net",

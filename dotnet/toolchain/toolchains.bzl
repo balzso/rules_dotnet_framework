@@ -1,47 +1,47 @@
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:dotnet_toolchain.bzl",
+    "@rules_dotnet_framework//dotnet/private:dotnet_toolchain.bzl",
     "dotnet_toolchain",
 )
 # NOTE: core_toolchain removed/missing - commented out (.NET Core not needed for VSTO)
 # load(
-#     "@io_bazel_rules_dotnet//dotnet/private:core_toolchain.bzl",
+#     "@rules_dotnet_framework//dotnet/private:core_toolchain.bzl",
 #     "core_toolchain",
 # )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:net_toolchain.bzl",
+    "@rules_dotnet_framework//dotnet/private:net_toolchain.bzl",
     "net_toolchain",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:net_empty_toolchain.bzl",
+    "@rules_dotnet_framework//dotnet/private:net_empty_toolchain.bzl",
     "net_empty_toolchain",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:sdk.bzl",
+    "@rules_dotnet_framework//dotnet/private:sdk.bzl",
     "dotnet_host_sdk",
 )
 # NOTE: sdk_core.bzl removed/missing - commented out (.NET Core not needed for VSTO)
 # load(
-#     "@io_bazel_rules_dotnet//dotnet/private:sdk_core.bzl",
+#     "@rules_dotnet_framework//dotnet/private:sdk_core.bzl",
 #     "core_download_sdk",
 # )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:sdk_net.bzl",
+    "@rules_dotnet_framework//dotnet/private:sdk_net.bzl",
     "net_download_sdk",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:sdk_wix.bzl",
+    "@rules_dotnet_framework//dotnet/private:sdk_wix.bzl",
     "wix_register_sdk",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:vsto_utilities.bzl",
+    "@rules_dotnet_framework//dotnet/private:vsto_utilities.bzl",
     "vsto_utilities_register",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/private:wix_toolchain.bzl",
+    "@rules_dotnet_framework//dotnet/private:wix_toolchain.bzl",
     "wix_toolchain",
 )
 load(
-    "@io_bazel_rules_dotnet//dotnet/platform:list.bzl",
+    "@rules_dotnet_framework//dotnet/platform:list.bzl",
     "DOTNETARCH",
     "DOTNETOS",
     "DOTNETIMPL",
@@ -243,7 +243,7 @@ def _generate_toolchains():
 
 _toolchains = _generate_toolchains()
 
-_label_prefix = "@io_bazel_rules_dotnet//dotnet/toolchain:"
+_label_prefix = "@rules_dotnet_framework//dotnet/toolchain:"
 
 def dotnet_register_toolchains(dotnet_version = DEFAULT_VERSION, core_version = CORE_DEFAULT_VERSION, net_version = NET_DEFAULT_VERSION, net_roslyn_version = NET_ROSLYN_DEFAULT_VERSION):
     """See /dotnet/toolchains.rst#dostnet-register-toolchains for full documentation."""

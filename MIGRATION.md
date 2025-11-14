@@ -39,12 +39,12 @@ If you're using the official [rules_dotnet](https://github.com/bazelbuild/rules_
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
-    name = "io_bazel_rules_dotnet",
+    name = "rules_dotnet_framework",
     sha256 = "...",
     url = "https://github.com/bazelbuild/rules_dotnet/archive/...",
 )
 
-load("@io_bazel_rules_dotnet//dotnet:deps.bzl", "dotnet_register_toolchains", "dotnet_repositories")
+load("@rules_dotnet_framework//dotnet:deps.bzl", "dotnet_register_toolchains", "dotnet_repositories")
 
 dotnet_repositories()
 
@@ -56,16 +56,16 @@ dotnet_register_toolchains("dotnet", "3.1.100")  # .NET Core SDK
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
-    name = "io_bazel_rules_dotnet",
+    name = "rules_dotnet_framework",
     sha256 = "...",
-    url = "https://github.com/YOUR_ORG/rules_dotnet_framework/archive/...",
+    url = "https://github.com/balzso/rules_dotnet_framework/archive/...",
 )
 
-load("@io_bazel_rules_dotnet//dotnet:deps.bzl", "dotnet_repositories")
+load("@rules_dotnet_framework//dotnet:deps.bzl", "dotnet_repositories")
 
 dotnet_repositories()
 
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "dotnet_repositories_nugets", "net_register_sdk", "dotnet_register_toolchains")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "dotnet_repositories_nugets", "net_register_sdk", "dotnet_register_toolchains")
 
 net_register_sdk()  # Auto-detect .NET Framework SDK
 
@@ -90,7 +90,7 @@ dotnet_repositories_nugets()  # Test frameworks
 
 **Before:**
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_library", "core_binary")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "core_library", "core_binary")
 
 core_library(
     name = "MyLib.dll",
@@ -107,7 +107,7 @@ core_binary(
 
 **After:**
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_library", "net_binary")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_library", "net_binary")
 
 net_library(
     name = "MyLib.dll",
@@ -215,7 +215,7 @@ Look at your `.csproj` file:
 #### 2. Create BUILD.bazel
 
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_library", "net_resx")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_library", "net_resx")
 
 # Compile .resx to .resources
 net_resx(
@@ -382,7 +382,7 @@ MySolution/
 
 **MyLib/BUILD.bazel:**
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_library")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_library")
 
 net_library(
     name = "MyLib.dll",
@@ -394,7 +394,7 @@ net_library(
 
 **MyApp/BUILD.bazel:**
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_binary")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_binary")
 
 net_binary(
     name = "MyApp.exe",
@@ -406,7 +406,7 @@ net_binary(
 
 **MyTests/BUILD.bazel:**
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_nunit3_test")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_nunit3_test")
 
 net_nunit3_test(
     name = "MyTests.dll",
@@ -466,7 +466,7 @@ MyExcelAddIn/
 
 **BUILD.bazel:**
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_vsto_addin")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_vsto_addin")
 
 net_vsto_addin(
     name = "MyExcelAddIn.dll",
@@ -503,7 +503,7 @@ MyExcelAddIn/
 
 **Setup.Wix/BUILD.bazel:**
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_vsto_installer")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_vsto_installer")
 
 net_vsto_installer(
     name = "MyExcelAddInSetup.msi",
@@ -598,7 +598,7 @@ This updates `nuget.bzl` and WORKSPACE automatically.
 3. For system assemblies, use `net_gac`:
 
 ```python
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_gac")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_gac")
 
 net_gac(
     name = "system_web",
