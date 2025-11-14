@@ -6,6 +6,7 @@ net_binary(
         "*.cs",
         "rules/*.cs",
     ]),
+    data = ["nuget2bazel.exe.config"],
     target_framework = "net472",
     nowarn = ["CS1701"],  # Suppress assembly version mismatch warnings for System.IO.Compression
     visibility = ["//visibility:public"],
