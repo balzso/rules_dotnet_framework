@@ -1,5 +1,10 @@
-Dotnet toolchains
-=================
+.NET Framework Toolchains
+==========================
+
+.. note::
+   This documentation is adapted from the original `rules_dotnet <https://github.com/bazelbuild/rules_dotnet>`_ project (commit d672bdb).
+   This fork focuses exclusively on .NET Framework 4.7-4.7.2 support on Windows.
+
 .. _core: core.bzl
 .. _rules_go: https://github.com/bazelbuild/rules_go
 .. _go_toolchains: https://github.com/bazelbuild/rules_go/blob/master/go/toolchains.rst
@@ -11,7 +16,6 @@ Dotnet toolchains
 .. role:: value(code)
 .. |mandatory| replace:: **mandatory value**
 
-
 The design and implementation is heavily based on rules_go_ `toolchains <go_toolchains_>`_.
 
 -----
@@ -19,28 +23,24 @@ The design and implementation is heavily based on rules_go_ `toolchains <go_tool
 Design
 ------
 
-The Dotnet toolchain consists of three main layers, `the sdk`_ and `the toolchain`_ and `the context`_.
+The .NET Framework toolchain consists of three main layers: `the sdk`_, `the toolchain`_, and `the context`_.
 
 The SDK
 ~~~~~~~
 
-At the bottom there are frameworks (.NET, Core or Mono). More than one version of the
-framework may be used at the same time.
+At the bottom is the .NET Framework SDK. This fork supports .NET Framework 4.7, 4.7.1, and 4.7.2 on Windows.
 
-The frameworks are bound to ``@dotnet_sdk`` for Mono, ``@core_sdk_<version>`` for .NET Core
-and ``@net_sdk_<version>`` for .NET Framework. They can be referred to directly if needed, but 
+The frameworks are bound to ``@net_sdk_<version>`` (e.g., ``@net_sdk_net472``). They can be referred to directly if needed, but
 in general you should always access it through the toolchain.
 
-The net_register_sdk_, mono_register_sdk_ and core_register_sdk_ family of rules are 
-responsible for downloading these, and adding just enough of a build file to expose the 
-contents to Bazel.
-
+The net_register_sdk_ rule is responsible for locating the .NET Framework SDK on the Windows system and adding
+just enough of a build file to expose the contents to Bazel.
 
 The toolchain
 ~~~~~~~~~~~~~
 
-This a wrapper over the sdk that provides enough extras to match, target and work on a specific
-platforms. It should be considered an opaque type, you only ever use it through `the context`_.
+This is a wrapper over the SDK that provides enough extras to match, target and work on a specific
+platform. It should be considered an opaque type; you only ever use it through `the context`_.
 
 Declaration
 ^^^^^^^^^^^
@@ -48,15 +48,15 @@ Declaration
 Toolchains are declared using the dotnet_toolchain macro.
 
 Toolchains are pre-declared for all the known combinations of host and target, and the names
-are a predictable
-"<**host**>"
-So for instance if the rules_dotnet repository is loaded with
-it's default name, the following toolchain labels (along with many others) will be available
+are predictable: "<**host**>"
+
+For instance, if the rules_dotnet repository is loaded with its default name,
+the following toolchain labels (along with others) will be available:
 
   .. code:: python
 
-    @io_bazel_rules_dotnet//dotnet/toolchain:net_linux_amd64
-  
+    @io_bazel_rules_dotnet//dotnet/toolchain:net_windows_amd64
+
 The toolchains are not usable until you register them.
 
 Registration
@@ -74,17 +74,16 @@ If you wish to have more control over the toolchains you can instead just make d
 calls to dotnet_register_toolchains_ with only the toolchains you wish to install. You can see an
 example of this in `limiting the available toolchains <https://docs.bazel.build/versions/master/toolchains.html#toolchain-resolution>`_.
 
-
 The context
 ~~~~~~~~~~~
 
-This is the type you use if you are writing custom rules that need dotnet toochain.
+This is the type you use if you are writing custom rules that need the dotnet toolchain.
 
 Use
 ^^^
 
-If you are writing a new rule that wants to use the Dotnet toolchain, you need to do a couple of things.
-First, you have to declare that you want to consume the toolchain on the rule declaration.
+If you are writing a new rule that wants to use the .NET Framework toolchain, you need to do a couple of things.
+First, you have to declare that you want to consume the toolchain in the rule declaration:
 
 .. code:: python
 
@@ -94,12 +93,12 @@ First, you have to declare that you want to consume the toolchain on the rule de
       _my_rule_impl,
       attrs = {
           ...
-         "dotnet_context_data": attr.label(default = Label("@io_bazel_rules_dotnet//:dotnet_context_data"))
+         "dotnet_context_data": attr.label(default = Label("@io_bazel_rules_dotnet//:net_context_data"))
      },
-     toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_mono"],
+     toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_net"],
  )
 
-And then in the rule body, you need to get the toolchain itself and use it's action generators.
+And then in the rule body, you need to get the toolchain itself and use its action generators:
 
 .. code:: python
 
@@ -113,15 +112,15 @@ API
 dotnet_register_toolchains
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Installs the Dotnet toolchains. 
+Installs the .NET Framework toolchains. Call this from your WORKSPACE file.
 
 net_register_sdk
 ~~~~~~~~~~~~~~~~
 
-Registers .NET Framework.
+Registers .NET Framework SDK.
 
-It searches for .NET Framework using well known location and provided version. On non-Windows
-platform the function doesn't do anything.
+Searches for .NET Framework using well-known Windows locations and the provided version.
+On non-Windows platforms this function doesn't do anything.
 
 +--------------------------------+-----------------------------+------------------------------------+
 | **Name**                       | **Type**                    | **Default value**                  |
@@ -129,7 +128,7 @@ platform the function doesn't do anything.
 | :param:`net_version`           | :type:`string`              | |mandatory|                        |
 +--------------------------------+-----------------------------+------------------------------------+
 | The `TFM <https://docs.microsoft.com/en-us/dotnet/standard/frameworks>`_ of the framework.        |
-| The supported frameworks are listed in `list.bzl <platform/list.bzl>`_.                           |
+| Supported values: net47, net471, net472                                                           |
 +--------------------------------+-----------------------------+------------------------------------+
 | :param:`net_roslyn_version`    | :type:`string`              | :value:`NET_ROSLYN_DEFAULT_VERSION`|
 +--------------------------------+-----------------------------+------------------------------------+
@@ -138,7 +137,8 @@ platform the function doesn't do anything.
 +--------------------------------+-----------------------------+------------------------------------+
 | :param:`tools_version`         | :type:`string`              | :value:`net472`                    |
 +--------------------------------+-----------------------------+------------------------------------+
-| The version of the framework to use for resgen tools if different is expected.                    |
+| The version of the framework to use for SDK tools (resgen, mage, signtool, etc.) if different     |
+| is expected.                                                                                      |
 +--------------------------------+-----------------------------+------------------------------------+
 | :param:`name`                  | :type:`string`              | :value:`None`                      |
 +--------------------------------+-----------------------------+------------------------------------+
@@ -146,95 +146,73 @@ platform the function doesn't do anything.
 | is used.                                                                                          |
 +--------------------------------+-----------------------------+------------------------------------+
 
-core_register_sdk
-~~~~~~~~~~~~~~~~~
+Example
+^^^^^^^
 
-Registers .NET Core.
+.. code:: python
 
-It downloads the sdk for given version. Uses core_download_sdk_.
+  load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "net_register_sdk", "dotnet_register_toolchains")
+
+  # Register .NET Framework 4.7.2 SDK
+  net_register_sdk(net_version = "net472")
+
+  # Register all toolchains
+  dotnet_register_toolchains()
+
+wix_register_sdk
+~~~~~~~~~~~~~~~~
+
+Registers WiX Toolset v5 SDK for building Windows Installer (.msi) packages.
+
+Auto-detects wix.exe from .NET global tools or NuGet cache. Supports explicit path override.
+
+See ``docs/wix.md`` for detailed WiX integration guide.
 
 +--------------------------------+-----------------------------+------------------------------------+
 | **Name**                       | **Type**                    | **Default value**                  |
 +--------------------------------+-----------------------------+------------------------------------+
-| :param:`core_version`          | :type:`string`              | |mandatory|                        |
+| :param:`name`                  | :type:`string`              | :value:`wix_sdk`                   |
 +--------------------------------+-----------------------------+------------------------------------+
-| The exact version of the framework.                                                               |
-| The supported frameworks are listed in `list.bzl <platform/list.bzl>`_.                           |
+| The name under which the WiX SDK will be registered.                                              |
 +--------------------------------+-----------------------------+------------------------------------+
-| :param:`name`                  | :type:`string`              | :value:`None`                      |
+| :param:`wix_path`              | :type:`string`              | :value:`None`                      |
 +--------------------------------+-----------------------------+------------------------------------+
-| The name under which the SDK will be registered. If not provided the default @core_sdk_<version>  |
-| is used.                                                                                          |
+| Optional explicit path to wix.exe. If not provided, auto-detection is performed.                  |
 +--------------------------------+-----------------------------+------------------------------------+
 
-mono_register_sdk
-~~~~~~~~~~~~~~~~~
+vsto_utilities_register
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-Registers Mono SDK. Mono has to be installed before use. See dotnet_host_sdk_.
+Registers VSTO Utilities from Visual Studio installation.
 
-dotnet_host_sdk
-~~~~~~~~~~~~~~~
+Auto-detects Visual Studio installation (2017/2019/2022) and locates Microsoft.Office.Tools.*.Utilities.dll files
+required for VSTO installer builds.
 
-This detects the host Mono for use in toolchains. It usually is not used directly. Use mono_register_sdk_
-instead.
+See ``docs/vsto.md`` for detailed VSTO development guide.
 
-It searches the PATH. 
-
-+--------------------------------+-----------------------------+-----------------------------------+
-| **Name**                       | **Type**                    | **Default value**                 |
-+--------------------------------+-----------------------------+-----------------------------------+
-| :param:`name`                  | :type:`string`              | |mandatory|                       |
-+--------------------------------+-----------------------------+-----------------------------------+
-| A unique name for this sdk. This should almost always be :value:`dotnet_sdk` if you want the SDK |
-| to be used by toolchains.                                                                        |
-+--------------------------------+-----------------------------+-----------------------------------+
-
-core_download_sdk
-~~~~~~~~~~~~~~~~~
-
-This downloads .NET Core SDK for given version. It usually is not used directly. Use core_register_sdk_
-instead. 
-
-+--------------------------------+-----------------------------+-----------------------------------+
-| **Name**                       | **Type**                    | **Default value**                 |
-+--------------------------------+-----------------------------+-----------------------------------+
-| :param:`name`                  | :type:`string`              | |mandatory|                       |
-+--------------------------------+-----------------------------+-----------------------------------+
-| A unique name for this sdk. This should almost always be :value:`core_sdk_<tfm>` if you want the |
-| SDK to be used by toolchains.                                                                    |
-+--------------------------------+-----------------------------+-----------------------------------+
-| :param:`version`               | :type:`string`              |                                   |
-+--------------------------------+-----------------------------+-----------------------------------+
-| The version for the framework                                                                    |
-+--------------------------------+-----------------------------+-----------------------------------+
-
++--------------------------------+-----------------------------+------------------------------------+
+| **Name**                       | **Type**                    | **Default value**                  |
++--------------------------------+-----------------------------+------------------------------------+
+| :param:`name`                  | :type:`string`              | :value:`vsto_utilities`            |
++--------------------------------+-----------------------------+------------------------------------+
+| The name under which the VSTO Utilities will be registered.                                       |
++--------------------------------+-----------------------------+------------------------------------+
+| :param:`vs_path`               | :type:`string`              | :value:`None`                      |
++--------------------------------+-----------------------------+------------------------------------+
+| Optional explicit path to Visual Studio installation. If not provided, auto-detection is          |
+| performed.                                                                                        |
++--------------------------------+-----------------------------+------------------------------------+
 
 dotnet_context
 ~~~~~~~~~~~~~~
 
 This collects the information needed to form and return a :type:`DotnetContext` from a rule ctx.
-It uses the attrbutes and the toolchains.
+It uses the attributes and the toolchains.
 It can only be used in the implementation of a rule that has the dotnet toolchain attached and
-the dotnet context data as an attribute. 
+the dotnet context data as an attribute.
 
 .. code:: python
 
-  my_rule_mono = rule(
-      _my_rule_impl,
-      attrs = {
-          ...
-        "dotnet_context_data": attr.label(default = Label("@io_bazel_rules_dotnet//:dotnet_context_data"))
-      },
-      toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_mono"],
-  )
-  my_rule_core = rule(
-      _my_rule_impl,
-      attrs = {
-          ...
-        "dotnet_context_data": attr.label(default = Label("@io_bazel_rules_dotnet//:core_context_data"))
-      },
-      toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_core"],
-  )
   my_rule_net = rule(
       _my_rule_impl,
       attrs = {
@@ -243,7 +221,6 @@ the dotnet context data as an attribute.
       },
       toolchains = ["@io_bazel_rules_dotnet//dotnet:toolchain_type_net"],
   )
-
 
 +--------------------------------+-----------------------------+-----------------------------------+
 | **Name**                       | **Type**                    | **Default value**                 |
@@ -256,17 +233,16 @@ the dotnet context data as an attribute.
 The context object
 ~~~~~~~~~~~~~~~~~~
 
-DotnetContext is never returned by a rule, instead you build one using dotnet_context(ctx) in the 
-top of any custom skylark rule that wants to interact with the dotnet rules (regardless of framework).
-It provides all the information needed to create dotnet actions, and create or interact with the 
+DotnetContext is never returned by a rule; instead you build one using dotnet_context(ctx) at the
+top of any custom Starlark rule that wants to interact with the .NET Framework rules.
+It provides all the information needed to create dotnet actions, and create or interact with the
 other dotnet providers.
 
 When you get a DotnetContext from a context (see use_) it exposes a number of fields and methods.
 
-All methods take the DotnetContext as the only positional argument, all other arguments even if
-mandatory must be specified by name, to allow us to re-order and deprecate individual parameters
+All methods take the DotnetContext as the only positional argument; all other arguments, even if
+mandatory, must be specified by name, to allow us to re-order and deprecate individual parameters
 over time.
-
 
 Methods
 ^^^^^^^
@@ -281,7 +257,6 @@ Methods
   * declare_file_
   * new_library_
   * new_resource_
-
 
 Fields
 ^^^^^^
@@ -300,15 +275,15 @@ Fields
 +--------------------------------+-----------------------------------------------------------------+
 | :param:`runner`                | :type:`File`                                                    |
 +--------------------------------+-----------------------------------------------------------------+
-| The "mono" or "dotnet" binary used to run framework executables                                  |
+| The framework launcher binary used to run executables (Windows-specific).                        |
 +--------------------------------+-----------------------------------------------------------------+
 | :param:`mcs`                   | :type:`File`                                                    |
 +--------------------------------+-----------------------------------------------------------------+
-| The main "mcs" (C# compiler) binary used.                                                        |
+| The main "csc.exe" (C# compiler) binary used.                                                    |
 +--------------------------------+-----------------------------------------------------------------+
 | :param:`resgen`                | :type:`File`                                                    |
 +--------------------------------+-----------------------------------------------------------------+
-| The resource compiler (dotnet executable).                                                       |
+| The resource compiler (resgen.exe from Windows SDK).                                             |
 +--------------------------------+-----------------------------------------------------------------+
 | :param:`stdlib`                | :type:`File`                                                    |
 +--------------------------------+-----------------------------------------------------------------+
@@ -316,7 +291,7 @@ Fields
 +--------------------------------+-----------------------------------------------------------------+
 | :param:`libVersion`            | :type:`string`                                                  |
 +--------------------------------+-----------------------------------------------------------------+
-| The library version to used.                                                                     |
+| The library version to used (e.g., "v4.7.2").                                                    |
 +--------------------------------+-----------------------------------------------------------------+
 | :param:`actions`               | :type:`ctx.actions`                                             |
 +--------------------------------+-----------------------------------------------------------------+
@@ -328,11 +303,10 @@ Fields
 | The label for directory with the selected libraryVersion assemblies                              |
 +--------------------------------+-----------------------------------------------------------------+
 
-
 assembly
 ~~~~~~~~
 
-The library function adds an action that compiles the set of sources into assembly.
+The assembly function adds an action that compiles the set of sources into an assembly.
 
 It returns DotnetLibrary_ provider.
 
@@ -341,7 +315,7 @@ It returns DotnetLibrary_ provider.
 +--------------------------------+--------------------------------+-----------------------------------+
 | :param:`name`                  | :type:`string`                 | |mandatory|                       |
 +--------------------------------+--------------------------------+-----------------------------------+
-| This must be the same DotnetContext object you got this function from.                              |
+| A unique name for this assembly.                                                                    |
 +--------------------------------+--------------------------------+-----------------------------------+
 | :param:`srcs`                  | :type:`File iterable`          | |mandatory|                       |
 +--------------------------------+--------------------------------+-----------------------------------+
@@ -357,11 +331,11 @@ It returns DotnetLibrary_ provider.
 +--------------------------------+--------------------------------+-----------------------------------+
 | :param:`resources`             | :type:`DotnetResource iterable`| :value:`None`                     |
 +--------------------------------+--------------------------------+-----------------------------------+
-| An iterable of all directly imported libraries.                                                     |
+| An iterable of all resources to embed.                                                              |
 +--------------------------------+--------------------------------+-----------------------------------+
-| :param:`exeutable`             | :type:`bool`                   | :value:`True`                     |
+| :param:`executable`            | :type:`bool`                   | :value:`True`                     |
 +--------------------------------+--------------------------------+-----------------------------------+
-| Determines if an exeutable or ordinary assembly is produced                                         |
+| Determines if an executable or ordinary assembly is produced                                        |
 +--------------------------------+--------------------------------+-----------------------------------+
 | :param:`defines`               | :type:`string iterable`        | :value:`None`                     |
 +--------------------------------+--------------------------------+-----------------------------------+
@@ -373,7 +347,7 @@ It returns DotnetLibrary_ provider.
 +--------------------------------+--------------------------------+-----------------------------------+
 | :param:`data`                  | :type:`File iterable`          | :value:`None`                     |
 +--------------------------------+--------------------------------+-----------------------------------+
-| List of addtional files to use as runfiles.                                                         |
+| List of additional files to use as runfiles.                                                        |
 +--------------------------------+--------------------------------+-----------------------------------+
 | :param:`keyfile`               | :type:`File`                   | :value:`None`                     |
 +--------------------------------+--------------------------------+-----------------------------------+
@@ -383,7 +357,7 @@ It returns DotnetLibrary_ provider.
 resx
 ~~~~
 
-The function adds an action that compiles a single .resx file into .resources file.
+The function adds an action that compiles a single .resx file into a .resources file.
 
 It returns DotnetResource_ provider.
 
@@ -392,7 +366,7 @@ It returns DotnetResource_ provider.
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`name`              | :type:`string`              | |mandatory|                           |
 +----------------------------+-----------------------------+---------------------------------------+
-| A unique name for this rule.                                                                     |
+| A unique name for this resource.                                                                 |
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`src`               | :type:`label`               | |mandatory|                           |
 +----------------------------+-----------------------------+---------------------------------------+
@@ -408,7 +382,6 @@ It returns DotnetResource_ provider.
 +----------------------------+-----------------------------+---------------------------------------+
 | An alternative name of the output file                                                           |
 +----------------------------+-----------------------------+---------------------------------------+
-
 
 declare_file
 ~~~~~~~~~~~~
@@ -431,7 +404,7 @@ new_library
 ~~~~~~~~~~~
 
 This creates a new DotnetLibrary_.
-You can add extra fields to the go library by providing extra named parameters to this function,
+You can add extra fields to the library by providing extra named parameters to this function;
 they will be visible to the resolver when it is invoked.
 
 +--------------------------------+--------------------------------+-----------------------------------+
@@ -460,7 +433,7 @@ they will be visible to the resolver when it is invoked.
 +--------------------------------+--------------------------------+-----------------------------------+
 | :param:`pdb`                   | :type:`File`                   |                                   |
 +--------------------------------+--------------------------------+-----------------------------------+
-| If .pdb file for given library                                                                      |
+| The .pdb file for given library                                                                     |
 +--------------------------------+--------------------------------+-----------------------------------+
 | :param:`runfiles`              | :type:`depset of Files`        |                                   |
 +--------------------------------+--------------------------------+-----------------------------------+
@@ -471,7 +444,7 @@ new_resource
 ~~~~~~~~~~~~
 
 This creates a new DotnetResource_.
-You can add extra fields to the dotnet resource by providing extra named parameters to this function,
+You can add extra fields to the dotnet resource by providing extra named parameters to this function;
 they will be visible to the resolver when it is invoked.
 
 +--------------------------------+-----------------------------+-----------------------------------+
@@ -479,7 +452,7 @@ they will be visible to the resolver when it is invoked.
 +--------------------------------+-----------------------------+-----------------------------------+
 | :param:`name`                  | :type:`string`              | |mandatory|                       |
 +--------------------------------+-----------------------------+-----------------------------------+
-| A unique name for this library.                                                                  |
+| A unique name for this resource.                                                                 |
 +--------------------------------+-----------------------------+-----------------------------------+
 | :param:`dotnet`                | :type:`DotnetContext`       | |mandatory|                       |
 +--------------------------------+-----------------------------+-----------------------------------+
@@ -491,7 +464,7 @@ they will be visible to the resolver when it is invoked.
 +--------------------------------+-----------------------------+-----------------------------------+
 | :param:`identifier`            | :type:`string`              | :value:`None`                     |
 +--------------------------------+-----------------------------+-----------------------------------+
-| Identifier passed to -resource flag of mcs compiler. If empty the basename of the result         |
+| Identifier passed to -resource flag of csc compiler. If empty the basename of the result         |
 | is used.                                                                                         |
 +--------------------------------+-----------------------------+-----------------------------------+
 
@@ -520,5 +493,3 @@ Looks for given library within imported framework.
 +--------------------------------+-----------------------------+-----------------------------------+
 | Name of the library to look for.                                                                 |
 +--------------------------------+-----------------------------+-----------------------------------+
-
-

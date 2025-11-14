@@ -1,6 +1,6 @@
-# .NET Framework Rules for Bazel
+# Bazel Rules for .NET Framework, VSTO, and WiX
 
-Bazel build rules for .NET Framework projects on Windows.
+Bazel build rules for .NET Framework, VSTO Office add-ins, and WiX installers on Windows.
 
 ## Status
 
@@ -12,6 +12,8 @@ This is a fork of [rules_dotnet](https://github.com/bazelbuild/rules_dotnet) spe
 - C# compilation
 - NUnit3 and xUnit testing
 - NuGet package management
+- **VSTO (Visual Studio Tools for Office) add-in development**
+- **WiX Toolset v5 for Windows Installer (.msi) packages**
 
 **Not Supported:**
 - .NET Core / .NET 5+ (use the official [rules_dotnet](https://github.com/bazelbuild/rules_dotnet) instead)
@@ -116,6 +118,13 @@ bazel build //:MyApp.exe
 - `net_resx` - Compile .resx resource files
 - `net_resource` - Embed resources into assemblies
 
+### VSTO Rules
+- `net_vsto_addin` - Build VSTO (Office) add-ins with automatic PIA and manifest generation
+
+### WiX Rules
+- `wix_package` - Build Windows Installer (.msi) packages
+- `net_vsto_installer` - High-level rule for VSTO add-in installers
+
 ### Other Rules
 - `net_gac` - Reference assemblies from the Global Assembly Cache (GAC)
 - `net_com_library` - Import COM libraries via tlbimp
@@ -157,9 +166,13 @@ See the `tests/examples/` directory for working examples:
 - `example_test/` - NUnit3 tests
 - `example_xunit/` - xUnit tests
 - `example_resx/` - Resource file usage
+- `example_vsto_excel/` - VSTO Excel add-in with ClickOnce manifests
 
 ## Documentation
 
+- [VSTO Development Guide](docs/vsto.md)
+- [WiX Integration Guide](docs/wix.md)
+- [Migration Guide](MIGRATION.md)
 - [NuGet Package Management](tools/nuget2bazel/README.rst)
 - [Toolchain Configuration](dotnet/toolchains.rst)
 - [Providers](dotnet/providers.rst)

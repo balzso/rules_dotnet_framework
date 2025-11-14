@@ -1,5 +1,9 @@
-Core dotnet rules
-=================
+.NET Framework Rules
+=====================
+
+.. note::
+   This documentation is adapted from the original `rules_dotnet <https://github.com/bazelbuild/rules_dotnet>`_ project (commit d672bdb).
+   This fork focuses exclusively on .NET Framework 4.7-4.7.2 support on Windows.
 
 .. _test_filter: https://docs.bazel.build/versions/master/user-manual.html#flag--test_filter
 .. _test_arg: https://docs.bazel.build/versions/master/user-manual.html#flag--test_arg
@@ -12,8 +16,7 @@ Core dotnet rules
 .. role:: value(code)
 .. |mandatory| replace:: **mandatory value**
 
-These are the core dotnet rules, required for basic operation.
-The intent is that theses rules are sufficient to match the capabilities of the normal dotnet tools.
+These are the core .NET Framework rules for Bazel, providing support for building .NET Framework 4.7-4.7.2 projects on Windows.
 
 .. contents:: :depth: 2
 
@@ -22,11 +25,10 @@ The intent is that theses rules are sufficient to match the capabilities of the 
 API
 ---
 
-dotnet_library, core_library, net_library
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+net_library
+~~~~~~~~~~~
 
-This builds a dotnet assembly from a set of source files. The rule generates assebly respectively
-for Mono, .NET Core and .NET.
+Builds a .NET Framework class library (.dll) from a set of C# source files.
 
 Providers
 ^^^^^^^^^
@@ -47,11 +49,11 @@ Attributes
 | :param:`deps`              | :type:`label_list`          | :value:`None`                         |
 +----------------------------+-----------------------------+---------------------------------------+
 | The direct dependencies of this library.                                                         |
-| These may be dotnet_library rules or compatible rules with the DotnetLibrary_ provider.          |
+| These may be net_library rules or compatible rules with the DotnetLibrary_ provider.             |
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`resources`         | :type:`label_list`          | :value:`None`                         |
 +----------------------------+-----------------------------+---------------------------------------+
-| The list of resources to compile with. Usually provided via reference to dotnet_resx             |
+| The list of resources to compile with. Usually provided via reference to net_resx                |
 | or the rules compatible with DotnetResource_ provider                                            |
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`srcs`              | :type:`label_list`          | :value:`None`                         |
@@ -81,7 +83,7 @@ Attributes
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`nowarn`            | :type:`string_list`         | :value:`None`                         |
 +----------------------------+-----------------------------+---------------------------------------+
-| The list of warnings to be ignored. The warnings are passed to -nowarn compiler opion.           |
+| The list of warnings to be ignored. The warnings are passed to -nowarn compiler option.          |
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`langversion`       | :type:`string`              | :value:`latest`                       |
 +----------------------------+-----------------------------+---------------------------------------+
@@ -92,44 +94,35 @@ Attributes
 +----------------------------+-----------------------------+---------------------------------------+
 | Version to be set for the assembly. The version is set by compiling in AssemblyVersion attribute |
 +----------------------------+-----------------------------+---------------------------------------+
+| :param:`target_framework`  | :type:`string`              | :value:`net472`                       |
++----------------------------+-----------------------------+---------------------------------------+
+| Target .NET Framework version. Supported values: net47, net471, net472                           |
++----------------------------+-----------------------------+---------------------------------------+
 
 Example
 ^^^^^^^
 
 .. code:: python
 
-  dotnet_library(
-      name = "foo_bar.dll",
+  net_library(
+      name = "MyClass.dll",
       srcs = [
-          "foo.cs",
-          "bar.cs",
+          "MyClass.cs",
+          "Helper.cs",
       ],
       deps = [
-          "//examples/example_lib:MyClass",
-          "@npgsql//:npgsqllib",
+          "//examples/example_lib:OtherLib.dll",
+          "@newtonsoft.json//:lib",
       ],
+      target_framework = "net472",
       visibility = ["//visibility:public"],
   )
 
-  [core_library(
-    name = "{}_TransitiveClass-core.dll".format(framework),
-    srcs = [
-        "TransitiveClass.cs",
-    ],
-    dotnet_context_data = "@io_bazel_rules_dotnet//:core_context_data_{}".format(framework),
-    visibility = ["//visibility:public"],
-    deps = [
-        "@io_bazel_rules_dotnet//dotnet/stdlib.core/{}:libraryset".format(framework),
-    ],
-  ) for framework in DOTNET_CORE_FRAMEWORKS]
+net_binary
+~~~~~~~~~~
 
-dotnet_binary, net_binary, core_binary
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This builds an executable from a set of source files (respectively for Mono, .NET and .NET Core).
-You can run the binary with ``bazel run``, or you can
-build it with ``bazel build`` and run it directly.
-
+Builds a .NET Framework executable (.exe) from a set of C# source files.
+You can run the binary with ``bazel run``, or you can build it with ``bazel build`` and run it directly.
 
 Providers
 ^^^^^^^^^
@@ -150,11 +143,11 @@ Attributes
 | :param:`deps`              | :type:`label_list`          | :value:`None`                         |
 +----------------------------+-----------------------------+---------------------------------------+
 | The direct dependencies of this library.                                                         |
-| These may be dotnet_library rules or compatible rules with the DotnetLibrary_ provider.          |
+| These may be net_library rules or compatible rules with the DotnetLibrary_ provider.             |
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`resources`         | :type:`label_list`          | :value:`None`                         |
 +----------------------------+-----------------------------+---------------------------------------+
-| The list of resources to compile with. Usually provided via reference to dotnet_resx             |
+| The list of resources to compile with. Usually provided via reference to net_resx                |
 | or the rules compatible with DotnetResource_ provider                                            |
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`srcs`              | :type:`label_list`          | :value:`None`                         |
@@ -184,7 +177,7 @@ Attributes
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`nowarn`            | :type:`string_list`         | :value:`None`                         |
 +----------------------------+-----------------------------+---------------------------------------+
-| The list of warnings to be ignored. The warnings are passed to -nowarn compiler opion.           |
+| The list of warnings to be ignored. The warnings are passed to -nowarn compiler option.          |
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`langversion`       | :type:`string`              | :value:`latest`                       |
 +----------------------------+-----------------------------+---------------------------------------+
@@ -195,32 +188,38 @@ Attributes
 +----------------------------+-----------------------------+---------------------------------------+
 | Version to be set for the assembly. The version is set by compiling in AssemblyVersion attribute |
 +----------------------------+-----------------------------+---------------------------------------+
+| :param:`target_framework`  | :type:`string`              | :value:`net472`                       |
++----------------------------+-----------------------------+---------------------------------------+
+| Target .NET Framework version. Supported values: net47, net471, net472                           |
++----------------------------+-----------------------------+---------------------------------------+
 
 Example
 ^^^^^^^
 
 .. code:: python
 
-  dotnet_binary(
-      name = "foo_bar.exe",
+  net_binary(
+      name = "MyApp.exe",
       srcs = [
-          "foo.cs",
-          "bar.cs",
+          "Program.cs",
       ],
       deps = [
-          "//examples/example_lib:MyClass",
-          "@npgsql//:npgsqllib",
+          "//examples/example_lib:MyClass.dll",
+          "@newtonsoft.json//:lib",
       ],
+      target_framework = "net472",
       visibility = ["//visibility:public"],
   )
 
-dotnet_nunit_test, net_nunit_test, net_nunit3_test, core_xunit_test, net_xunit_test, dotnet_xunit_test
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+net_nunit3_test, net_xunit_test
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This builds a set of tests that can be run with ``bazel test``.
-'_nunit_' rules use NUnit2, '_nunit3_' rules use NUnit3, '_xunit_' rules use xunit.
+Builds a set of tests that can be run with ``bazel test``.
 
-To run all tests in the workspace, and print output on failure, run
+- ``net_nunit3_test`` uses NUnit3 test framework
+- ``net_xunit_test`` uses xUnit test framework
+
+To run all tests in the workspace, and print output on failure, run:
 
 ::
 
@@ -228,7 +227,6 @@ To run all tests in the workspace, and print output on failure, run
 
 You can run specific tests by passing the `--test_filter=pattern <test_filter_>`_ argument to Bazel.
 You can pass arguments to tests by passing `--test_arg=arg <test_arg_>`_ arguments to Bazel.
-
 
 Attributes
 ^^^^^^^^^^
@@ -243,11 +241,11 @@ Attributes
 | :param:`deps`              | :type:`label_list`          | :value:`None`                              |
 +----------------------------+-----------------------------+--------------------------------------------+
 | The direct dependencies of this library.                                                              |
-| These may be dotnet_library rules or compatible rules with the DotnetLibrary_ provider.               |
+| These may be net_library rules or compatible rules with the DotnetLibrary_ provider.                  |
 +----------------------------+-----------------------------+--------------------------------------------+
 | :param:`resources`         | :type:`label_list`          | :value:`None`                              |
 +----------------------------+-----------------------------+--------------------------------------------+
-| The list of resources to compile with. Usually provided via reference to dotnet_resx                  |
+| The list of resources to compile with. Usually provided via reference to net_resx                     |
 | or the rules compatible with DotnetResource_ provider                                                 |
 +----------------------------+-----------------------------+--------------------------------------------+
 | :param:`srcs`              | :type:`label_list`          | :value:`None`                              |
@@ -265,13 +263,13 @@ Attributes
 +----------------------------+-----------------------------+--------------------------------------------+
 | :param:`testlauncher`      | :type:`Label`               | :value:`<as required by unit framework>`   |
 +----------------------------+-----------------------------+--------------------------------------------+
-| The list of defines passed via /define compiler option                                                |
+| The test launcher executable to use                                                                   |
 +----------------------------+-----------------------------+--------------------------------------------+
 | :param:`nowarn`            | :type:`string_list`         | :value:`None`                              |
 +----------------------------+-----------------------------+--------------------------------------------+
-| The list of warnings to be ignored. The warnings are passed to -nowarn compiler opion.                |
+| The list of warnings to be ignored. The warnings are passed to -nowarn compiler option.               |
 +----------------------------+-----------------------------+--------------------------------------------+
-| :param:`langversion`       | :type:`string`              | :value:`latest `                           |
+| :param:`langversion`       | :type:`string`              | :value:`latest`                            |
 +----------------------------+-----------------------------+--------------------------------------------+
 | Version of the language to use. See                                                                   |
 | https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/configure-language-version          |
@@ -280,32 +278,145 @@ Attributes
 +----------------------------+-----------------------------+--------------------------------------------+
 | Version to be set for the assembly. The version is set by compiling in AssemblyVersion attribute      |
 +----------------------------+-----------------------------+--------------------------------------------+
-
+| :param:`target_framework`  | :type:`string`              | :value:`net472`                            |
++----------------------------+-----------------------------+--------------------------------------------+
+| Target .NET Framework version. Supported values: net47, net471, net472                                |
++----------------------------+-----------------------------+--------------------------------------------+
 
 Test example
 ^^^^^^^^^^^^
 
 .. code:: python
 
-    dotnet_nunit_test(
+    net_nunit3_test(
         name = "MyTest.dll",
         srcs = [
             "MyTest.cs",
         ],
         deps = [
-            "//examples/example_lib:MyClass",
-            "@nunitv2//:netstandard1.0_net",
+            "//examples/example_lib:MyClass.dll",
+            "@nunit//:lib",
         ],
+        target_framework = "net472",
     )
 
+    net_xunit_test(
+        name = "MyXunitTest.dll",
+        srcs = [
+            "MyXunitTest.cs",
+        ],
+        deps = [
+            "//examples/example_lib:MyClass.dll",
+            "@xunit.assert//:lib",
+        ],
+        target_framework = "net472",
+    )
 
-dotnet_resx, net_resx, core_resx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+net_vsto_addin
+~~~~~~~~~~~~~~
 
-This builds a dotnet .resources file from a single .resx file.
+Builds a VSTO (Visual Studio Tools for Office) add-in for Microsoft Office applications.
+This rule compiles a .NET Framework assembly with Office interop dependencies, generates
+application and deployment manifests, and optionally signs the assembly and manifests.
 
-.NET Core version uses a custom tool to convert text .resx file to .resources files because no 
-standard tool is provided.
+See ``docs/vsto.md`` for detailed VSTO development guide.
+
+Providers
+^^^^^^^^^
+
+* DotnetLibrary_
+* DotnetResource_
+
+Attributes
+^^^^^^^^^^
+
++----------------------------+-----------------------------+---------------------------------------+
+| **Name**                   | **Type**                    | **Default value**                     |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`name`              | :type:`string`              | |mandatory|                           |
++----------------------------+-----------------------------+---------------------------------------+
+| A unique name for this rule. It must have .dll extension.                                        |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`srcs`              | :type:`label_list`          | :value:`None`                         |
++----------------------------+-----------------------------+---------------------------------------+
+| The list of .cs source files that are compiled to create the add-in.                             |
+| Only :value:`.cs` files are permitted                                                            |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`deps`              | :type:`label_list`          | :value:`None`                         |
++----------------------------+-----------------------------+---------------------------------------+
+| Additional dependencies beyond the automatic Office PIAs and VSTO runtime.                       |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`resources`         | :type:`label_list`          | :value:`None`                         |
++----------------------------+-----------------------------+---------------------------------------+
+| The list of resources to compile with (e.g., Ribbon XML, images).                                |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`office_app`        | :type:`string`              | |mandatory|                           |
++----------------------------+-----------------------------+---------------------------------------+
+| Target Office application. Supported values: Excel, Word, Outlook, PowerPoint                    |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`office_version`    | :type:`string`              | :value:`2016`                         |
++----------------------------+-----------------------------+---------------------------------------+
+| Target Office version. Supported values: 2013, 2016, 2019, 2021                                  |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`keyfile`           | :type:`label`               | :value:`None`                         |
++----------------------------+-----------------------------+---------------------------------------+
+| Strong name key file (.snk) for signing the assembly. Required for VSTO add-ins.                 |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`cert_file`         | :type:`label`               | :value:`None`                         |
++----------------------------+-----------------------------+---------------------------------------+
+| Authenticode certificate (.pfx) for signing manifests. Optional but recommended for deployment.  |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`cert_password`     | :type:`string`              | :value:`""`                           |
++----------------------------+-----------------------------+---------------------------------------+
+| Password for the certificate file.                                                               |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`install_url`       | :type:`string`              | :value:`""`                           |
++----------------------------+-----------------------------+---------------------------------------+
+| ClickOnce installation URL for the deployment manifest.                                          |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`publisher`         | :type:`string`              | :value:`""`                           |
++----------------------------+-----------------------------+---------------------------------------+
+| Publisher name for the deployment manifest.                                                      |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`data`              | :type:`label_list`          | :value:`None`                         |
++----------------------------+-----------------------------+---------------------------------------+
+| Additional files to include as deployment dependencies.                                          |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`target_framework`  | :type:`string`              | :value:`net472`                       |
++----------------------------+-----------------------------+---------------------------------------+
+| Target .NET Framework version. VSTO requires net472 or higher.                                   |
++----------------------------+-----------------------------+---------------------------------------+
+
+Example
+^^^^^^^
+
+.. code:: python
+
+  net_vsto_addin(
+      name = "MyExcelAddIn.dll",
+      srcs = [
+          "ThisAddIn.cs",
+          "Ribbon1.cs",
+          "Ribbon1.Designer.cs",
+      ],
+      resources = [
+          ":Ribbon1.resx",
+      ],
+      office_app = "Excel",
+      office_version = "2016",
+      target_framework = "net472",
+      keyfile = ":MyAddIn.snk",
+      cert_file = ":certificate.pfx",
+      cert_password = "your_password",
+      install_url = "http://myserver/MyExcelAddIn/",
+      publisher = "My Company",
+  )
+
+net_resx
+~~~~~~~~
+
+Builds a .NET Framework .resources file from a single .resx file.
+Uses resgen.exe from the Windows SDK.
 
 Providers
 ^^^^^^^^^
@@ -336,27 +447,21 @@ Attributes
 +----------------------------+-----------------------------+---------------------------------------+
 | An alternative name of the output file                                                           |
 +----------------------------+-----------------------------+---------------------------------------+
-| :param:`simpleresgen`      | :type:`Label`               | :value:`<as required>`                |
-+----------------------------+-----------------------------+---------------------------------------+
-| An alternative tool for generating resources file. It is used by .NET Core to use a custom       |
-| //tools/simpleresgen tool                                                                        |
-+----------------------------+-----------------------------+---------------------------------------+
 
 Example
 ^^^^^^^
 
 .. code:: python
 
-    dotnet_resx(
+    net_resx(
         name = "Transform",
-        src = ":src/ClientUtilities/util/Transform.resx",
+        src = "Transform.resx",
     )
-
 
 net_resx_multi
 ~~~~~~~~~~~~~~
 
-This builds a dotnet .resources files from multiple .resx file (one for each).
+Builds .NET Framework .resources files from multiple .resx files (one for each).
 
 Providers
 ^^^^^^^^^
@@ -375,31 +480,25 @@ Attributes
 +-----------------------------+-----------------------------+---------------------------------------+
 | :param:`srcs`               | :type:`label_list`          | |mandatory|                           |
 +-----------------------------+-----------------------------+---------------------------------------+
-| The source files to be embeded.                                                                   |
+| The source files to be embedded.                                                                  |
 +-----------------------------+-----------------------------+---------------------------------------+
 | :param:`identiferBase`      | :type:`string`              | :value:`""`                           |
 +-----------------------------+-----------------------------+---------------------------------------+
-| The logical name for given resource is constructred from identiferBase + "." +                    |
-| "directory.repalce('/','.')" + "." + basename + ".resources". The resulting name that is used     |
+| The logical name for given resource is constructed from identiferBase + "." +                     |
+| "directory.replace('/','.')" + "." + basename + ".resources". The resulting name is used          |
 | to load the resource.                                                                             |
 +-----------------------------+-----------------------------+---------------------------------------+
 | :param:`fixedIdentifierBase`| :type:`string`              | :value:`""`                           |
 +-----------------------------+-----------------------------+---------------------------------------+
-| The logical name for given resource is constructred from fixedIdentiferBase + "." +               |
-| "." + basename + ".resources. The resulting name that is used to load the resource.               |
-| Either identifierBase of fixedIdentifierBase must be specified                                    |
-+-----------------------------+-----------------------------+---------------------------------------+
-| :param:`simpleresgen`       | :type:`Label`               | :value:`<as required>`                |
-+-----------------------------+-----------------------------+---------------------------------------+
-| An alternative tool for generating resources file. It is used by .NET Core to use a custom        |
-| //tools/simpleresgen tool                                                                         |
+| The logical name for given resource is constructed from fixedIdentiferBase + "." +                |
+| "." + basename + ".resources. The resulting name is used to load the resource.                    |
+| Either identifierBase or fixedIdentifierBase must be specified                                    |
 +-----------------------------+-----------------------------+---------------------------------------+
 
+net_resource
+~~~~~~~~~~~~
 
-net_resource, core_resource
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This wraps a resource so it can be embeded into an assembly.
+Wraps a resource file so it can be embedded into an assembly.
 
 Providers
 ^^^^^^^^^
@@ -418,7 +517,7 @@ Attributes
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`src`               | :type:`label`               | |mandatory|                           |
 +----------------------------+-----------------------------+---------------------------------------+
-| The source to be embeded.                                                                        |
+| The source to be embedded.                                                                       |
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`identifer`         | :type:`string`              | :value:`""`                           |
 +----------------------------+-----------------------------+---------------------------------------+
@@ -426,10 +525,10 @@ Attributes
 | The default is the basename of the file name (no subfolder).                                     |
 +----------------------------+-----------------------------+---------------------------------------+
 
-net_resource_multi, core_resource_multi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+net_resource_multi
+~~~~~~~~~~~~~~~~~~
 
-This wraps multiple resource files so they can be embeded into an assembly.
+Wraps multiple resource files so they can be embedded into an assembly.
 
 Providers
 ^^^^^^^^^
@@ -448,27 +547,26 @@ Attributes
 +-----------------------------+-----------------------------+---------------------------------------+
 | :param:`srcs`               | :type:`label_list`          | |mandatory|                           |
 +-----------------------------+-----------------------------+---------------------------------------+
-| The source files to be embeded.                                                                   |
+| The source files to be embedded.                                                                  |
 +-----------------------------+-----------------------------+---------------------------------------+
 | :param:`identiferBase`      | :type:`string`              | :value:`""`                           |
 +-----------------------------+-----------------------------+---------------------------------------+
-| The logical name for given resource is constructred from identiferBase + "." +                    |
-| "directory.repalce('/','.')" + "." + filename. The resulting name that is used to load            |
+| The logical name for given resource is constructed from identiferBase + "." +                     |
+| "directory.replace('/','.')" + "." + filename. The resulting name is used to load                 |
 | the resource.                                                                                     |
 +-----------------------------+-----------------------------+---------------------------------------+
 | :param:`fixedIdentifierBase`| :type:`string`              | :value:`""`                           |
 +-----------------------------+-----------------------------+---------------------------------------+
-| The logical name for given resource is constructred from fixedIdentiferBase + "." +               |
-| "." + filename. The resulting name that is used to load the resource.                             |
-| Either identifierBase of fixedIdentifierBase must be specified                                    |
+| The logical name for given resource is constructed from fixedIdentiferBase + "." +                |
+| "." + filename. The resulting name is used to load the resource.                                  |
+| Either identifierBase or fixedIdentifierBase must be specified                                    |
 +-----------------------------+-----------------------------+---------------------------------------+
 
+net_import_library, net_import_binary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-dotnet_import_library, core_import_library, net_import_library, dotnet_import_binary, core_import_binary, net_import_binary
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This imports an external dll and transforms it into DotnetLibrary_ so it can be referenced
-as dependency by other rules. Often used with dotnet_nuget_new_. 
+Imports an external .dll or .exe and transforms it into DotnetLibrary_ so it can be referenced
+as a dependency by other rules. Often used with NuGet packages.
 
 Providers
 ^^^^^^^^^
@@ -488,7 +586,7 @@ Attributes
 | :param:`deps`              | :type:`label_list`          | :value:`None`                         |
 +----------------------------+-----------------------------+---------------------------------------+
 | The direct dependencies of this dll.                                                             |
-| These may be dotnet_library rules or compatible rules with the DotnetLibrary_ provider.          |
+| These may be net_library rules or compatible rules with the DotnetLibrary_ provider.             |
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`src`               | :type:`label`               | |mandatory|                           |
 +----------------------------+-----------------------------+---------------------------------------+
@@ -497,14 +595,20 @@ Attributes
 
 Example
 ^^^^^^^
-See dotnet_nuget_new_.
 
+.. code:: python
 
-dotnet_stdlib, core_stdlib, net_stdlib
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  net_import_library(
+      name = "Newtonsoft.Json",
+      src = "@newtonsoft.json//file:lib/net45/Newtonsoft.Json.dll",
+      visibility = ["//visibility:public"],
+  )
 
-This imports a frameworkl dll and transforms it into DotnetLibrary_ so it can be referenced
-as dependency by other rules. Uses by //dotnet/stdlib... packages. 
+net_stdlib
+~~~~~~~~~~
+
+Imports a .NET Framework SDK assembly and transforms it into DotnetLibrary_ so it can be referenced
+as a dependency by other rules. Used by //dotnet/stdlib.net/... packages.
 
 Providers
 ^^^^^^^^^
@@ -524,7 +628,7 @@ Attributes
 | :param:`deps`              | :type:`label_list`          | :value:`None`                         |
 +----------------------------+-----------------------------+---------------------------------------+
 | The direct dependencies of this dll.                                                             |
-| These may be dotnet_library rules or compatible rules with the DotnetLibrary_ provider.          |
+| These may be net_library rules or compatible rules with the DotnetLibrary_ provider.             |
 +----------------------------+-----------------------------+---------------------------------------+
 | :param:`data`              | :type:`label_list`          | :value:`None`                         |
 +----------------------------+-----------------------------+---------------------------------------+
@@ -540,11 +644,10 @@ Attributes
 | speeds up the rule execution because the proper file needs not to be searched for within sdk     |
 +----------------------------+-----------------------------+---------------------------------------+
 
+net_libraryset
+~~~~~~~~~~~~~~
 
-dotnet_libraryset, core_libraryset, net_libraryset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Groups libraries into sets which may be used as dependency. 
+Groups libraries into sets which may be used as a dependency.
 
 Providers
 ^^^^^^^^^
@@ -566,6 +669,72 @@ Attributes
 | The list of dependencies.                                                                        |
 +----------------------------+-----------------------------+---------------------------------------+
 
+net_gac
+~~~~~~~
 
+References an assembly from the Global Assembly Cache (GAC).
 
+Attributes
+^^^^^^^^^^
 
++----------------------------+-----------------------------+---------------------------------------+
+| **Name**                   | **Type**                    | **Default value**                     |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`name`              | :type:`string`              | |mandatory|                           |
++----------------------------+-----------------------------+---------------------------------------+
+| A unique name for this rule.                                                                     |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`assembly`          | :type:`string`              | |mandatory|                           |
++----------------------------+-----------------------------+---------------------------------------+
+| The assembly name (e.g., "System.Web")                                                           |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`version`           | :type:`string`              | |mandatory|                           |
++----------------------------+-----------------------------+---------------------------------------+
+| The assembly version (e.g., "4.0.0.0")                                                           |
++----------------------------+-----------------------------+---------------------------------------+
+
+Example
+^^^^^^^
+
+.. code:: python
+
+  net_gac(
+      name = "system_web",
+      assembly = "System.Web",
+      version = "4.0.0.0",
+  )
+
+net_com_library
+~~~~~~~~~~~~~~~
+
+Imports a COM type library and generates an interop assembly using tlbimp.exe.
+
+Attributes
+^^^^^^^^^^
+
++----------------------------+-----------------------------+---------------------------------------+
+| **Name**                   | **Type**                    | **Default value**                     |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`name`              | :type:`string`              | |mandatory|                           |
++----------------------------+-----------------------------+---------------------------------------+
+| A unique name for this rule.                                                                     |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`src`               | :type:`label`               | |mandatory|                           |
++----------------------------+-----------------------------+---------------------------------------+
+| The COM type library file (.tlb or .dll)                                                         |
++----------------------------+-----------------------------+---------------------------------------+
+| :param:`namespace`         | :type:`string`              | :value:`""`                           |
++----------------------------+-----------------------------+---------------------------------------+
+| Optional namespace for the generated interop assembly                                            |
++----------------------------+-----------------------------+---------------------------------------+
+
+Example
+^^^^^^^
+
+.. code:: python
+
+  net_com_library(
+      name = "MyComLib",
+      src = "MyComLib.tlb",
+      namespace = "MyCompany.Interop.MyComLib",
+  )

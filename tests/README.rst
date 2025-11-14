@@ -6,8 +6,8 @@ Main test areas
 
 .. Child list start
 
-* `Dotnet rules examples <examples/README.rst>`_
-* `Core Dotnet rules tests <core/README.rst>`_
+* `.NET Framework rules examples <examples/README.rst>`_
+* `.NET Framework rules tests <core/README.rst>`_
 
 .. Child list end
 
@@ -40,10 +40,9 @@ They must not be flakey
     We will generally just delete tests that flake, and if features cannot be
     tested without flakes we will probably delete the feature as well.
 
-They must work on all platforms
-    We support mac, linux and windows, and all our code must work across all
-    hosts. There are some tests that need to be platform specific, but it's
-    very rare, and needs a really strong rationale to be accepted.
+They must work on Windows
+    This fork is Windows-only. All tests must run on Windows with .NET Framework 4.7+
+    installed. Tests do not need to run on macOS or Linux.
 
 They must be as fast as possible
     Some tests need to be large and expensive, but most do not. In particular,

@@ -1,6 +1,10 @@
 Dotnet providers
 ================
 
+.. note::
+   This documentation is adapted from the original `rules_dotnet <https://github.com/bazelbuild/rules_dotnet>`_ project (commit d672bdb).
+   This fork focuses exclusively on .NET Framework 4.7-4.7.2 support on Windows.
+
 .. _providers: https://docs.bazel.build/versions/master/skylark/rules.html#providers
 .. _runfiles: https://docs.bazel.build/versions/master/skylark/lib/runfiles.html
 .. _File: https://docs.bazel.build/versions/master/skylark/lib/File.html
@@ -11,7 +15,7 @@ Dotnet providers
 .. |mandatory| replace:: **mandatory value**
 
 
-The providers_ are the outputs of the rules, you generaly get them by having a dependency on a rule,
+The providers_ are the outputs of the rules. You generally get them by having a dependency on a rule,
 and then asking for a provider of a specific type.
 
 .. contents:: :depth: 2

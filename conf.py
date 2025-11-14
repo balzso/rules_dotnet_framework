@@ -19,14 +19,14 @@
 
 # -- Project information -----------------------------------------------------
 
-project = u'rules_dotnet'
-copyright = u'2018, Tomek Strejczek'
-author = u'Tomek Strejczek'
+project = u'rules_dotnet_framework'
+copyright = u'2018 Tomek Strejczek (original), 2024 rules_dotnet_framework contributors (fork)'
+author = u'rules_dotnet_framework contributors'
 
 # The short X.Y version
-version = u''
+version = u'1.0'
 # The full version, including alpha/beta/rc tags
-release = u'0.0.1'
+release = u'1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -103,7 +103,7 @@ html_static_path = []
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'rules_dotnetdoc'
+htmlhelp_basename = 'rules_dotnet_frameworkdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -130,8 +130,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'rules_dotnet.tex', u'rules\\_dotnet Documentation',
-     u'Tomek Strejczek', 'manual'),
+    (master_doc, 'rules_dotnet_framework.tex', u'rules\\_dotnet\\_framework Documentation',
+     u'rules_dotnet_framework contributors', 'manual'),
 ]
 
 
@@ -140,7 +140,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'rules_dotnet', u'rules_dotnet Documentation',
+    (master_doc, 'rules_dotnet_framework', u'rules_dotnet_framework Documentation',
      [author], 1)
 ]
 
@@ -151,8 +151,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'rules_dotnet', u'rules_dotnet Documentation',
-     author, 'rules_dotnet', 'One line description of project.',
+    (master_doc, 'rules_dotnet_framework', u'rules_dotnet_framework Documentation',
+     author, 'rules_dotnet_framework', 'Bazel rules for building .NET Framework 4.7-4.7.2 projects on Windows.',
      'Miscellaneous'),
 ]
 
