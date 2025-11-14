@@ -1,5 +1,6 @@
 load(
     "@rules_dotnet_framework//dotnet/private:providers.bzl",
+    "DotnetContextData",
     "DotnetLibrary",
     "DotnetResource",
 )
@@ -38,7 +39,7 @@ def dotnet_context(ctx, attr = None):
     if not attr:
         attr = ctx.attr
 
-    context_data = attr.dotnet_context_data
+    context_data = attr.dotnet_context_data[DotnetContextData]
     toolchain = ctx.toolchains[context_data._toolchain_type]
 
     ext = ""
@@ -94,7 +95,7 @@ def dotnet_context(ctx, attr = None):
     )
 
 def _dotnet_context_data(ctx):
-    return struct(
+    return [DotnetContextData(
         _mcs_bin = ctx.attr.mcs_bin,
         _mono_bin = ctx.attr.mono_bin,
         _lib = ctx.attr.lib,
@@ -108,7 +109,7 @@ def _dotnet_context_data(ctx):
         _csc = ctx.attr.csc,
         _runtime = ctx.attr.runtime,
         _mage_wrapper = ctx.attr.mage_wrapper,
-    )
+    )]
 
 dotnet_context_data = rule(
     _dotnet_context_data,

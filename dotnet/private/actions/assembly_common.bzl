@@ -8,6 +8,12 @@ load(
 )
 load("@rules_dotnet_framework//dotnet/private/rules:common.bzl", "collect_transitive_info")
 load("@rules_dotnet_framework//dotnet/private/rules:versions.bzl", "version2string")
+load(
+    "@rules_dotnet_framework//dotnet/platform:list.bzl",
+    "DOTNET_CORE_FRAMEWORKS",
+    "DOTNET_NET_FRAMEWORKS",
+    "DOTNET_NETSTANDARD",
+)
 
 def _map_resource(d):
     return d.result.path + "," + d.identifier
@@ -135,9 +141,19 @@ def emit_assembly_common(
     # Generate the source file for target framework
     if target_framework != "":
         f = dotnet._ctx.actions.declare_file(result.basename + "._tf_.cs", sibling = result)
+
+        # Convert TFM (e.g. "net472") to full framework name (e.g. ".NETFramework,Version=v4.7.2")
+        full_framework_name = target_framework
+        if target_framework in DOTNET_NET_FRAMEWORKS:
+            full_framework_name = DOTNET_NET_FRAMEWORKS[target_framework][0]
+        elif target_framework in DOTNET_CORE_FRAMEWORKS:
+            full_framework_name = DOTNET_CORE_FRAMEWORKS[target_framework][0]
+        elif target_framework in DOTNET_NETSTANDARD:
+            full_framework_name = DOTNET_NETSTANDARD[target_framework][0]
+
         content = """
         [assembly:System.Runtime.Versioning.TargetFramework("{}")]
-        """.format(target_framework)
+        """.format(full_framework_name)
         dotnet._ctx.actions.write(f, content)
         args.add(f)
         direct_inputs.append(f)

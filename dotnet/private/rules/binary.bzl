@@ -4,6 +4,7 @@ load(
 )
 load(
     "@rules_dotnet_framework//dotnet/private:providers.bzl",
+    "DotnetContextData",
     "DotnetLibrary",
     "DotnetResourceList",
 )
@@ -56,7 +57,7 @@ def _binary_impl(ctx):
     )
 
     # Calculate final runtiles including runtime-required files
-    run_transitive = collect_transitive_info(ctx.attr.deps + ([ctx.attr.dotnet_context_data._runtime] if ctx.attr.dotnet_context_data._runtime != None else []))
+    run_transitive = collect_transitive_info(ctx.attr.deps + ([ctx.attr.dotnet_context_data[DotnetContextData]._runtime] if ctx.attr.dotnet_context_data[DotnetContextData]._runtime != None else []))
     direct_runfiles = []
     if dotnet.runner != None:
         direct_runfiles += dotnet.runner.files.to_list()

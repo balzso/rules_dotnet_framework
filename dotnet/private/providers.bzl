@@ -24,3 +24,22 @@ DotnetResourceList = provider()
 A represenatation of the lsit of compiled resource (.resources).
 See dotnet/providers.rst#DotnetResourceList for full documentation.
 """
+
+DotnetContextData = provider(
+    doc = "Context data for dotnet toolchain configuration",
+    fields = {
+        "_mcs_bin": "Mono C# compiler binary",
+        "_mono_bin": "Mono runtime binary",
+        "_lib": "Dotnet libraries",
+        "_tools": "Dotnet tools",
+        "_shared": "Shared configuration",
+        "_host": "Host platform",
+        "_libVersion": "Library version",
+        "_toolchain_type": "Toolchain type identifier",
+        "_framework": "Target framework version",
+        "_runner": "Test runner configuration",
+        "_csc": "C# compiler (csc.exe) configuration",
+        "_runtime": "Runtime configuration",
+        "_mage_wrapper": "Mage tool wrapper for manifest generation",
+    },
+)
