@@ -61,6 +61,7 @@ def declare_vsto_runtime_imports(vsto_path = None):
 VSTO_EXCEL_DEPS = [
     "@vsto_runtime//:Microsoft.Office.Tools.Common",
     "@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation",
+    "@vsto_runtime//:Microsoft.Office.Tools.Common.v4.0.Utilities",
     "@vsto_runtime//:Microsoft.Office.Tools.Excel",
     "@vsto_runtime//:Microsoft.Office.Tools.Excel.Implementation",
     "@vsto_runtime//:Microsoft.Office.Tools.Excel.v4.0.Utilities",
@@ -72,6 +73,7 @@ VSTO_EXCEL_DEPS = [
 VSTO_WORD_DEPS = [
     "@vsto_runtime//:Microsoft.Office.Tools.Common",
     "@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation",
+    "@vsto_runtime//:Microsoft.Office.Tools.Common.v4.0.Utilities",
     "@vsto_runtime//:Microsoft.Office.Tools.Word",
     "@vsto_runtime//:Microsoft.Office.Tools.Word.Implementation",
     "@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework",
@@ -82,6 +84,7 @@ VSTO_WORD_DEPS = [
 VSTO_OUTLOOK_DEPS = [
     "@vsto_runtime//:Microsoft.Office.Tools.Common",
     "@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation",
+    "@vsto_runtime//:Microsoft.Office.Tools.Common.v4.0.Utilities",
     "@vsto_runtime//:Microsoft.Office.Tools.Outlook",
     "@vsto_runtime//:Microsoft.Office.Tools.Outlook.Implementation",
     "@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework",
@@ -92,6 +95,7 @@ VSTO_OUTLOOK_DEPS = [
 VSTO_POWERPOINT_DEPS = [
     "@vsto_runtime//:Microsoft.Office.Tools.Common",
     "@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation",
+    "@vsto_runtime//:Microsoft.Office.Tools.Common.v4.0.Utilities",
     "@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework",
     "@vsto_runtime//:Microsoft.Office.Tools",
     "@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime",
@@ -188,6 +192,7 @@ def _vsto_runtime_register_impl(ctx):
     vsto_assemblies = [
         "Microsoft.Office.Tools.Common",
         "Microsoft.Office.Tools.Common.Implementation",
+        "Microsoft.Office.Tools.Common.v4.0.Utilities",
         "Microsoft.Office.Tools.Excel",
         "Microsoft.Office.Tools.Excel.Implementation",
         "Microsoft.Office.Tools.Excel.v4.0.Utilities",

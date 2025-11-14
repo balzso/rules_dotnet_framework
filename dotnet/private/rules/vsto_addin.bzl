@@ -202,6 +202,7 @@ net_vsto_addin = rule(
             default = [
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common.v4.0.Utilities"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Excel"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Excel.Implementation"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Excel.v4.0.Utilities"),
@@ -215,6 +216,7 @@ net_vsto_addin = rule(
             default = [
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common.v4.0.Utilities"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Word"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Word.Implementation"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework"),
@@ -227,6 +229,7 @@ net_vsto_addin = rule(
             default = [
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common.v4.0.Utilities"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Outlook"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Outlook.Implementation"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework"),
@@ -239,6 +242,7 @@ net_vsto_addin = rule(
             default = [
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common.v4.0.Utilities"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools"),
                 Label("@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime"),
