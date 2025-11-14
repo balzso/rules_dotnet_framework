@@ -208,5 +208,5 @@ wix_package = rule(
             doc = "WiX wrapper executable",
         ),
     },
-    toolchains = ["@rules_dotnet_framework//dotnet:toolchain_type"],
+    toolchains = ["@rules_dotnet_framework//dotnet:toolchain_type_net"],
 )

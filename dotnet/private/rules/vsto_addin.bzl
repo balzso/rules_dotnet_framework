@@ -261,6 +261,7 @@ net_vsto_addin = rule(
                 Label("@rules_dotnet_framework//dotnet/stdlib.net:system.windows.forms.dll"),
                 Label("@rules_dotnet_framework//dotnet/stdlib.net:system.xml.dll"),
                 Label("@rules_dotnet_framework//dotnet/stdlib.net:system.data.dll"),
+                Label("@rules_dotnet_framework//dotnet/stdlib.net:microsoft.csharp.dll"),
             ],
             providers = [DotnetLibrary],
         ),
