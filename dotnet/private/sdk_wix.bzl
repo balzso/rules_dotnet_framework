@@ -101,6 +101,17 @@ filegroup(
     # Symlink wix.exe into the repository
     ctx.symlink(wix_exe, "wix.exe")
 
+    # For .NET global tools, we also need to symlink the .store directory
+    # This contains the actual .NET assemblies that wix.exe needs to run
+    wix_exe_str = str(wix_exe)
+    if ".dotnet" in wix_exe_str and "tools" in wix_exe_str:
+        # wix.exe is at: ~/.dotnet/tools/wix.exe
+        # .store is at: ~/.dotnet/tools/.store
+        tools_dir = wix_exe.dirname
+        store_dir = tools_dir.get_child(".store")
+        if store_dir.exists:
+            ctx.symlink(store_dir, ".store")
+
     # Create a marker file with version info
     ctx.file("VERSION", "WiX Toolset v5 (detected at: {})".format(wix_exe))
 

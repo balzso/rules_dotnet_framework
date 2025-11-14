@@ -12,6 +12,65 @@ namespace wix_wrapper
     /// </summary>
     class Program
     {
+        /// <summary>
+        /// Quotes an argument if it contains spaces or special characters.
+        /// This ensures proper parsing by the command line processor.
+        /// </summary>
+        static string QuoteArgumentIfNeeded(string arg)
+        {
+            // If argument is empty, quote it
+            if (string.IsNullOrEmpty(arg))
+                return "\"\"";
+
+            // Check if quoting is needed
+            bool needsQuoting = arg.Contains(" ") || arg.Contains("\t") || arg.Contains("\"");
+
+            if (!needsQuoting)
+                return arg;
+
+            // Build quoted argument with escaped internal quotes
+            var result = new StringBuilder();
+            result.Append("\"");
+
+            for (int i = 0; i < arg.Length; i++)
+            {
+                char c = arg[i];
+
+                // Escape backslashes that precede quotes
+                if (c == '\\')
+                {
+                    int numBackslashes = 1;
+                    while (i + 1 < arg.Length && arg[i + 1] == '\\')
+                    {
+                        numBackslashes++;
+                        i++;
+                    }
+
+                    // If followed by quote, double the backslashes
+                    if (i + 1 < arg.Length && arg[i + 1] == '\"')
+                    {
+                        result.Append('\\', numBackslashes * 2);
+                    }
+                    else
+                    {
+                        result.Append('\\', numBackslashes);
+                    }
+                }
+                // Escape quotes
+                else if (c == '\"')
+                {
+                    result.Append("\\\"");
+                }
+                else
+                {
+                    result.Append(c);
+                }
+            }
+
+            result.Append("\"");
+            return result.ToString();
+        }
+
         static int Main(string[] args)
         {
             if (args.Length < 2)
@@ -31,7 +90,8 @@ namespace wix_wrapper
             }
 
             // Build arguments for wix.exe (skip the first arg which is wix.exe path)
-            string wixArguments = string.Join(" ", args.Skip(1));
+            // Properly quote arguments that contain spaces or quotes
+            string wixArguments = string.Join(" ", args.Skip(1).Select(QuoteArgumentIfNeeded));
 
             try
             {

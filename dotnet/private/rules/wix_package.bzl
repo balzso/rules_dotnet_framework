@@ -207,6 +207,10 @@ wix_package = rule(
             cfg = "exec",
             doc = "WiX wrapper executable",
         ),
+        "dotnet_context_data": attr.label(
+            default = Label("@rules_dotnet_framework//:net_context_data"),
+            doc = ".NET context data for toolchain configuration",
+        ),
     },
     toolchains = ["@rules_dotnet_framework//dotnet:toolchain_type_net"],
 )

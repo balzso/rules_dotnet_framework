@@ -141,7 +141,14 @@ def stage_vsto_files_for_wix_windows(
             files_to_stage.append(runfile)
 
     # Create Windows batch script to copy files
+    # Use %~dp0 to get the script directory, then navigate to execroot
+    # Script location: bazel-out/<config>/bin/Setup.Wix/<name>_stage.bat
+    # Execroot is 4 directories up: ..\..\..\..\
     copy_script = "@echo off\n"
+    copy_script += "REM Navigate to execroot from script location\n"
+    copy_script += "set EXECROOT=%~dp0..\\..\\..\\..\n"
+    copy_script += "cd /d \"%EXECROOT%\"\n"
+    copy_script += "\n"
     copy_script += "if not exist {} mkdir {}\n".format(
         staging_dir.path.replace("/", "\\"),
         staging_dir.path.replace("/", "\\"),
@@ -162,9 +169,11 @@ def stage_vsto_files_for_wix_windows(
     )
 
     # Execute the staging action
+    # Note: Convert path to Windows backslashes for cmd.exe
+    script_path_win = script_file.path.replace("/", "\\")
     ctx.actions.run(
         executable = "cmd.exe",
-        arguments = ["/c", script_file.path],
+        arguments = ["/c", script_path_win],
         inputs = files_to_stage + [script_file],
         outputs = [staging_dir],
         mnemonic = "WixStageFiles",

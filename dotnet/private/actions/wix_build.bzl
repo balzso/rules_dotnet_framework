@@ -156,7 +156,11 @@ def emit_wix_package_with_wrapper(
     # Defines
     args.add("-d", "SourceDir=" + staging_dir.path)
     for key, value in defines.items():
-        args.add("-d", "{}={}".format(key, value))
+        # Quote values that contain spaces
+        if " " in value:
+            args.add("-d", "{}=\"{}\"".format(key, value))
+        else:
+            args.add("-d", "{}={}".format(key, value))
 
     # Bindpaths
     for bind_name, bind_path in bindpaths.items():
