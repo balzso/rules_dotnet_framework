@@ -171,12 +171,29 @@ def emit_assembly_common(
     # References - also needs to include transitive dependencies
     transitive = collect_transitive_info(deps)
 
-    refs = []
+    # Split references into regular and embedded interop types
+    regular_refs = []
+    embed_refs = []
     for d in transitive:
         if d.ref != None:
-            refs.append(d.ref)
+            # Check if this assembly should have its types embedded
+            # Priority 1: Explicit embed_interop_types attribute
+            should_embed = hasattr(d, "embed_interop_types") and d.embed_interop_types
 
-    args.add_all(refs, format_each = "/r:%s")
+            # Priority 2: Auto-detect Office PIAs by label name (for VSTO add-ins)
+            if not should_embed and hasattr(d, "label"):
+                label_str = str(d.label)
+                if "office.interop" in label_str.lower() or "Office.Interop" in label_str:
+                    should_embed = True
+
+            if should_embed:
+                embed_refs.append(d.ref)
+            else:
+                regular_refs.append(d.ref)
+
+    # Add regular references with /r: and embedded types with /link:
+    args.add_all(regular_refs, format_each = "/r:%s")
+    args.add_all(embed_refs, format_each = "/link:%s")
 
     args.set_param_file_format("multiline")
 
@@ -197,7 +214,9 @@ def emit_assembly_common(
         runner_tools = dotnet.mcs.default_runfiles.files
         action_args = ["/noconfig", "@" + paramfile.path]
 
-    inputs = depset(direct = direct_inputs, transitive = [depset(direct = refs)])
+    # Combine all reference files for input tracking
+    all_refs = regular_refs + embed_refs
+    inputs = depset(direct = direct_inputs, transitive = [depset(direct = all_refs)])
     dotnet.actions.run(
         inputs = inputs,
         outputs = [result] + ([pdb] if pdb else []),

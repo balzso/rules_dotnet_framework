@@ -60,6 +60,8 @@ def _vsto_addin_impl(ctx):
         vsto_deps = ctx.attr._vsto_powerpoint_deps
 
     # Combine user deps with automatic VSTO/PIA deps + stdlib
+    # Note: Office PIAs will be automatically detected and embedded during compilation
+    # based on their label names (checked in assembly_common.bzl)
     all_deps = ctx.attr.deps + pia_deps + vsto_deps + ctx.attr._stdlib
 
     # Build the add-in assembly (DLL)

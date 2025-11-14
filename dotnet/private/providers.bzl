@@ -10,6 +10,7 @@ DotnetLibrary = provider(
         "pdb": "The pdb file (with compilation mode dbg)",
         "runfiles": "The depset of direct runfiles (File)",
         "transitive": "The full set of transitive dependencies. This does not include this assembly. List of DotnetLibrary",
+        "embed_interop_types": "If True, embed COM interop types using /link instead of /reference (default: False)",
     },
 )
 

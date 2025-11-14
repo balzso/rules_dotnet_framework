@@ -212,6 +212,44 @@ The `vsto_runtime_register()` repository rule automatically detects VSTO runtime
 
 **No manual dependency management required!** ✨
 
+#### COM Interop Type Embedding
+
+**NEW:** Office PIAs are automatically embedded using `EmbedInteropTypes`!
+
+When building VSTO add-ins, Office Primary Interop Assemblies (PIAs) are now **automatically embedded** into your add-in DLL using the C# `/link:` compiler flag. This provides several benefits:
+
+**Benefits:**
+- ✅ **Smaller deployment** - No need to distribute separate PIA DLLs
+- ✅ **Version independence** - Eliminates PIA version conflicts
+- ✅ **Simplified installation** - Fewer files to deploy
+- ✅ **Better compatibility** - Works across different Office versions
+
+**How it works:**
+1. The build system detects Office PIAs by their label (e.g., `@microsoft.office.interop.excel`)
+2. These assemblies are compiled with `/link:` instead of `/reference:`
+3. Only the COM interfaces you actually use are embedded
+4. CoClasses and implementations remain in Office at runtime
+
+**Technical details:**
+- The C# compiler embeds only interfaces, structures, enumerations, and delegates
+- COM classes (CoClasses) cannot be directly instantiated - use interfaces instead
+- Reduces deployment footprint significantly (typically 50KB+ reduction per PIA)
+- Compatible with Office 2010 and later
+
+**Example:** For Excel add-ins, `Microsoft.Office.Interop.Excel.dll` (~1MB) is NOT deployed. Instead, only the interfaces you use (~50KB) are embedded directly in your add-in DLL.
+
+**Manual control:**
+If you need to manually control type embedding for non-Office COM interop assemblies:
+
+```python
+net_import_library(
+    name = "my_com_interop",
+    src = "MyComInterop.dll",
+    version = "1.0.0.0",
+    embed_interop_types = True,  # Enable type embedding
+)
+```
+
 ## VSTO Project Structure
 
 ### Recommended File Organization

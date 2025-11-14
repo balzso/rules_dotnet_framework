@@ -42,6 +42,7 @@ def _import_library_impl(ctx):
         result = result,
         version = parse_version(ctx.attr.version),
         ref = ctx.attr.ref.files.to_list()[0] if ctx.attr.ref != None else result,
+        embed_interop_types = ctx.attr.embed_interop_types if hasattr(ctx.attr, "embed_interop_types") else False,
     )
 
     return [
@@ -89,6 +90,7 @@ def _import_binary_internal_impl(ctx):
         result = result,
         version = parse_version(ctx.attr.version),
         ref = ctx.attr.ref.files.to_list()[0] if ctx.attr.ref != None else result,
+        embed_interop_types = ctx.attr.embed_interop_types if hasattr(ctx.attr, "embed_interop_types") else False,
     )
 
     launcher = ctx.actions.declare_file(executable.result.basename + "_0.exe")
@@ -190,6 +192,11 @@ net_import_library = rule(
         "data": attr.label_list(allow_files = True),
         "version": attr.string(mandatory = True),
         "ref": attr.label(allow_files = True, mandatory = False),
+        "embed_interop_types": attr.bool(
+            default = False,
+            doc = "If True, embed COM interop types from this assembly using /link instead of /reference. " +
+                  "Typically used for Office PIAs and other COM interop assemblies.",
+        ),
     },
     executable = False,
 )
@@ -202,6 +209,11 @@ net_import_binary = rule(
         "data": attr.label_list(allow_files = True),
         "version": attr.string(mandatory = True),
         "ref": attr.label(allow_files = True, mandatory = False),
+        "embed_interop_types": attr.bool(
+            default = False,
+            doc = "If True, embed COM interop types from this assembly using /link instead of /reference. " +
+                  "Typically used for Office PIAs and other COM interop assemblies.",
+        ),
     },
     executable = False,
 )
