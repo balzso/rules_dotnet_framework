@@ -6,12 +6,9 @@ dotnet_repositories()
 
 load(
     "@rules_dotnet_framework//dotnet:defs.bzl",
-    "DOTNET_CORE_FRAMEWORKS",
     "DOTNET_NET_FRAMEWORKS",
-    "core_register_sdk",
     "dotnet_register_toolchains",
     "dotnet_repositories_nugets",
-    "mono_register_sdk",
     "net_gac4",
     "net_register_sdk",
 )
@@ -20,22 +17,13 @@ dotnet_register_toolchains()
 
 dotnet_repositories_nugets()
 
-mono_register_sdk()
-
+# Register .NET Framework SDKs for all supported versions
 [net_register_sdk(
     framework,
     name = "net_sdk_" + framework,
 ) for framework in DOTNET_NET_FRAMEWORKS]
 
-[core_register_sdk(
-    framework,
-    name = "core_sdk_{}".format(framework),
-) for framework in DOTNET_CORE_FRAMEWORKS]
-
-# Default core_sdk
-core_register_sdk()
-
-# Default net_sdk
+# Default .NET Framework SDK
 net_register_sdk()
 
 net_gac4(
