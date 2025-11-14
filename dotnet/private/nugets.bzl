@@ -159,3 +159,69 @@ def dotnet_repositories_nugets():
         urls = ["https://github.com/microsoft/vstest/archive/v16.5.0.tar.gz"],
         patches = ["@rules_dotnet_framework//3rd_party/vstest:000.patch"],
     )
+
+    # Office Primary Interop Assemblies for VSTO development
+    # These are automatically added as dependencies by net_vsto_addin rule
+    dotnet_nuget_new(
+        name = "microsoft.office.interop.excel",
+        package = "Microsoft.Office.Interop.Excel",
+        version = "15.0.4795.1001",
+        sha256 = "4ac556088f5440b64e241f2378d92c5933ddbd8a72d27ac3c69c053a48e4782c",
+        build_file_content = """
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_import_library")
+net_import_library(
+    name = "lib",
+    src = "lib/net20/Microsoft.Office.Interop.Excel.dll",
+    version = "0.0.0.0",
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    dotnet_nuget_new(
+        name = "microsoft.office.interop.word",
+        package = "Microsoft.Office.Interop.Word",
+        version = "15.0.4797.1003",
+        sha256 = "31e050e1a1f3e224f586f0568839d3c0c644cc3e8c4c8ad629493f2662a72c08",
+        build_file_content = """
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_import_library")
+net_import_library(
+    name = "lib",
+    src = "lib/net20/Microsoft.Office.Interop.Word.dll",
+    version = "0.0.0.0",
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    dotnet_nuget_new(
+        name = "microsoft.office.interop.outlook",
+        package = "Microsoft.Office.Interop.Outlook",
+        version = "15.0.4797.1003",
+        sha256 = "23f309886c79eadac46c58a50b3eb80e64d70e195c10cb82a8cf0de732743a4c",
+        build_file_content = """
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_import_library")
+net_import_library(
+    name = "lib",
+    src = "lib/net20/Microsoft.Office.Interop.Outlook.dll",
+    version = "0.0.0.0",
+    visibility = ["//visibility:public"],
+)
+""",
+    )
+
+    dotnet_nuget_new(
+        name = "microsoft.office.interop.powerpoint",
+        package = "Microsoft.Office.Interop.PowerPoint",
+        version = "15.0.4420.1017",
+        sha256 = "9c313119e98098d5df5acf6d013a617cbd68cdcd5483470a36b7a9de90dbff39",
+        build_file_content = """
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_import_library")
+net_import_library(
+    name = "lib",
+    src = "lib/net20/Microsoft.Office.Interop.PowerPoint.dll",
+    version = "0.0.0.0",
+    visibility = ["//visibility:public"],
+)
+""",
+    )

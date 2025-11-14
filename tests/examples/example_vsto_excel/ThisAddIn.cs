@@ -9,6 +9,8 @@ namespace ExampleVstoExcel
     /// </summary>
     public partial class ThisAddIn
     {
+        // VSTO Application property (injected by VSTO runtime)
+        public Excel.Application Application => Globals.ThisAddIn.Application;
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             // Add-in initialization code

@@ -11,11 +11,15 @@ load(
     "dotnet_repositories_nugets",
     "net_gac4",
     "net_register_sdk",
+    "vsto_runtime_register",
 )
 
 dotnet_register_toolchains()
 
 dotnet_repositories_nugets()
+
+# Register VSTO runtime for VSTO add-in development
+vsto_runtime_register(name = "vsto_runtime")
 
 # Register .NET Framework SDKs for all supported versions
 [net_register_sdk(

@@ -12,9 +12,7 @@ load("@rules_dotnet_framework//dotnet:defs.bzl", "net_vsto_addin")
 net_vsto_addin(
     name = "ExampleVstoExcel.dll",
     srcs = [
-        "Globals.cs",
-        "Ribbon1.cs",
-        "ThisAddIn.cs",
+        "Simple.cs",
     ],
     # Office application target
     office_app = "Excel",

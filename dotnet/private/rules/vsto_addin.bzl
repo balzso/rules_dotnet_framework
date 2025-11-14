@@ -51,17 +51,30 @@ def _vsto_addin_impl(ctx):
         library = dotnet.new_library(dotnet = dotnet)
         return [library]
 
-    # Get Office PIA dependencies
-    pia_deps = get_office_pia_deps(ctx.attr.office_app)
+    # Get Office PIA dependencies from private attributes
+    pia_deps = []
+    if ctx.attr.office_app == "Excel":
+        pia_deps = ctx.attr._pia_excel_deps
+    elif ctx.attr.office_app == "Word":
+        pia_deps = ctx.attr._pia_word_deps
+    elif ctx.attr.office_app == "Outlook":
+        pia_deps = ctx.attr._pia_outlook_deps
+    elif ctx.attr.office_app == "PowerPoint":
+        pia_deps = ctx.attr._pia_powerpoint_deps
 
-    # Get VSTO runtime dependencies
-    vsto_deps = _get_vsto_deps(ctx.attr.office_app)
+    # Get VSTO runtime dependencies from private attributes
+    vsto_deps = []
+    if ctx.attr.office_app == "Excel":
+        vsto_deps = ctx.attr._vsto_excel_deps
+    elif ctx.attr.office_app == "Word":
+        vsto_deps = ctx.attr._vsto_word_deps
+    elif ctx.attr.office_app == "Outlook":
+        vsto_deps = ctx.attr._vsto_outlook_deps
+    elif ctx.attr.office_app == "PowerPoint":
+        vsto_deps = ctx.attr._vsto_powerpoint_deps
 
-    # Combine user deps with automatic VSTO/PIA deps
-    # Note: We need to convert label strings to actual targets
-    # For now, we'll just use the user-provided deps
-    # TODO: Add automatic VSTO/PIA dependency injection when WORKSPACE is configured
-    all_deps = ctx.attr.deps  # + pia_deps + vsto_deps
+    # Combine user deps with automatic VSTO/PIA deps + stdlib
+    all_deps = ctx.attr.deps + pia_deps + vsto_deps + ctx.attr._stdlib
 
     # Build the add-in assembly (DLL)
     library = dotnet.assembly(
@@ -177,6 +190,80 @@ net_vsto_addin = rule(
             executable = True,
             cfg = "host",
             doc = "Optional mage_wrapper tool (auto-selected based on target_framework if not specified)",
+        ),
+
+        # Private attributes for automatic dependency injection
+        # Office PIA dependencies
+        "_pia_excel_deps": attr.label_list(
+            default = [Label("@microsoft.office.interop.excel//:lib")],
+            providers = [DotnetLibrary],
+        ),
+        "_pia_word_deps": attr.label_list(
+            default = [Label("@microsoft.office.interop.word//:lib")],
+            providers = [DotnetLibrary],
+        ),
+        "_pia_outlook_deps": attr.label_list(
+            default = [Label("@microsoft.office.interop.outlook//:lib")],
+            providers = [DotnetLibrary],
+        ),
+        "_pia_powerpoint_deps": attr.label_list(
+            default = [Label("@microsoft.office.interop.powerpoint//:lib")],
+            providers = [DotnetLibrary],
+        ),
+
+        # VSTO runtime dependencies
+        "_vsto_excel_deps": attr.label_list(
+            default = [
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Excel"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Excel.v4.0.Utilities"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools"),
+                Label("@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime"),
+            ],
+            providers = [DotnetLibrary],
+        ),
+        "_vsto_word_deps": attr.label_list(
+            default = [
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Word"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools"),
+                Label("@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime"),
+            ],
+            providers = [DotnetLibrary],
+        ),
+        "_vsto_outlook_deps": attr.label_list(
+            default = [
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Outlook"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools"),
+                Label("@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime"),
+            ],
+            providers = [DotnetLibrary],
+        ),
+        "_vsto_powerpoint_deps": attr.label_list(
+            default = [
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools"),
+                Label("@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime"),
+            ],
+            providers = [DotnetLibrary],
+        ),
+        # Standard library dependencies (automatically injected)
+        "_stdlib": attr.label_list(
+            default = [
+                Label("@rules_dotnet_framework//dotnet/stdlib.net:mscorlib.dll"),
+                Label("@rules_dotnet_framework//dotnet/stdlib.net:system.dll"),
+                Label("@rules_dotnet_framework//dotnet/stdlib.net:system.core.dll"),
+                Label("@rules_dotnet_framework//dotnet/stdlib.net:system.drawing.dll"),
+                Label("@rules_dotnet_framework//dotnet/stdlib.net:system.windows.forms.dll"),
+                Label("@rules_dotnet_framework//dotnet/stdlib.net:system.xml.dll"),
+                Label("@rules_dotnet_framework//dotnet/stdlib.net:system.data.dll"),
+            ],
+            providers = [DotnetLibrary],
         ),
     },
     toolchains = ["@rules_dotnet_framework//dotnet:toolchain_type_net"],
