@@ -9,23 +9,9 @@ load(
 load("@rules_dotnet_framework//dotnet/platform:list.bzl", "DOTNET_NET_FRAMEWORKS")
 load("@rules_dotnet_framework//dotnet/private/rules:versions.bzl", "parse_version")
 load("@rules_dotnet_framework//dotnet/private/vsto:office_pias.bzl", "get_office_pia_deps", "validate_office_version")
-load("@rules_dotnet_framework//dotnet/private/vsto:vsto_runtime.bzl", "VSTO_EXCEL_DEPS", "VSTO_WORD_DEPS", "VSTO_OUTLOOK_DEPS", "VSTO_POWERPOINT_DEPS")
 load("@rules_dotnet_framework//dotnet/private/actions:manifest.bzl", "emit_application_manifest")
 load("@rules_dotnet_framework//dotnet/private/actions:deployment_manifest.bzl", "emit_deployment_manifest")
 load("@rules_dotnet_framework//dotnet/private/actions:sign.bzl", "emit_sign_manifest")
-
-def _get_vsto_deps(office_app):
-    """Returns VSTO runtime dependencies for the specified Office application"""
-    if office_app == "Excel":
-        return VSTO_EXCEL_DEPS
-    elif office_app == "Word":
-        return VSTO_WORD_DEPS
-    elif office_app == "Outlook":
-        return VSTO_OUTLOOK_DEPS
-    elif office_app == "PowerPoint":
-        return VSTO_POWERPOINT_DEPS
-    else:
-        fail("Unknown Office application: {}".format(office_app))
 
 def _vsto_addin_impl(ctx):
     """Implementation of net_vsto_addin rule"""
@@ -195,19 +181,19 @@ net_vsto_addin = rule(
         # Private attributes for automatic dependency injection
         # Office PIA dependencies
         "_pia_excel_deps": attr.label_list(
-            default = [Label("@microsoft.office.interop.excel//:lib")],
+            default = [Label("@microsoft.office.interop.excel//:net")],
             providers = [DotnetLibrary],
         ),
         "_pia_word_deps": attr.label_list(
-            default = [Label("@microsoft.office.interop.word//:lib")],
+            default = [Label("@microsoft.office.interop.word//:net")],
             providers = [DotnetLibrary],
         ),
         "_pia_outlook_deps": attr.label_list(
-            default = [Label("@microsoft.office.interop.outlook//:lib")],
+            default = [Label("@microsoft.office.interop.outlook//:net")],
             providers = [DotnetLibrary],
         ),
         "_pia_powerpoint_deps": attr.label_list(
-            default = [Label("@microsoft.office.interop.powerpoint//:lib")],
+            default = [Label("@microsoft.office.interop.powerpoint//:net")],
             providers = [DotnetLibrary],
         ),
 
@@ -215,7 +201,9 @@ net_vsto_addin = rule(
         "_vsto_excel_deps": attr.label_list(
             default = [
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Excel"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Excel.Implementation"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Excel.v4.0.Utilities"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools"),
@@ -226,7 +214,9 @@ net_vsto_addin = rule(
         "_vsto_word_deps": attr.label_list(
             default = [
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Word"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Word.Implementation"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools"),
                 Label("@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime"),
@@ -236,7 +226,9 @@ net_vsto_addin = rule(
         "_vsto_outlook_deps": attr.label_list(
             default = [
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Outlook"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Outlook.Implementation"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools"),
                 Label("@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime"),
@@ -246,6 +238,7 @@ net_vsto_addin = rule(
         "_vsto_powerpoint_deps": attr.label_list(
             default = [
                 Label("@vsto_runtime//:Microsoft.Office.Tools.Common"),
+                Label("@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework"),
                 Label("@vsto_runtime//:Microsoft.Office.Tools"),
                 Label("@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime"),

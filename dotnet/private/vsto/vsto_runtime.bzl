@@ -55,9 +55,14 @@ def declare_vsto_runtime_imports(vsto_path = None):
     return vsto_assemblies
 
 # Standard VSTO runtime dependency groups for different Office applications
+# NOTE: These lists are deprecated. The net_vsto_addin rule uses private
+# attributes for automatic dependency injection instead of these lists.
+# They are kept here for backward compatibility and documentation purposes.
 VSTO_EXCEL_DEPS = [
     "@vsto_runtime//:Microsoft.Office.Tools.Common",
+    "@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation",
     "@vsto_runtime//:Microsoft.Office.Tools.Excel",
+    "@vsto_runtime//:Microsoft.Office.Tools.Excel.Implementation",
     "@vsto_runtime//:Microsoft.Office.Tools.Excel.v4.0.Utilities",
     "@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework",
     "@vsto_runtime//:Microsoft.Office.Tools",
@@ -66,7 +71,9 @@ VSTO_EXCEL_DEPS = [
 
 VSTO_WORD_DEPS = [
     "@vsto_runtime//:Microsoft.Office.Tools.Common",
+    "@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation",
     "@vsto_runtime//:Microsoft.Office.Tools.Word",
+    "@vsto_runtime//:Microsoft.Office.Tools.Word.Implementation",
     "@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework",
     "@vsto_runtime//:Microsoft.Office.Tools",
     "@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime",
@@ -74,7 +81,9 @@ VSTO_WORD_DEPS = [
 
 VSTO_OUTLOOK_DEPS = [
     "@vsto_runtime//:Microsoft.Office.Tools.Common",
+    "@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation",
     "@vsto_runtime//:Microsoft.Office.Tools.Outlook",
+    "@vsto_runtime//:Microsoft.Office.Tools.Outlook.Implementation",
     "@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework",
     "@vsto_runtime//:Microsoft.Office.Tools",
     "@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime",
@@ -82,6 +91,7 @@ VSTO_OUTLOOK_DEPS = [
 
 VSTO_POWERPOINT_DEPS = [
     "@vsto_runtime//:Microsoft.Office.Tools.Common",
+    "@vsto_runtime//:Microsoft.Office.Tools.Common.Implementation",
     "@vsto_runtime//:Microsoft.Office.Tools.v4.0.Framework",
     "@vsto_runtime//:Microsoft.Office.Tools",
     "@vsto_runtime//:Microsoft.VisualStudio.Tools.Applications.Runtime",
@@ -89,10 +99,13 @@ VSTO_POWERPOINT_DEPS = [
 
 def _detect_vsto_runtime_path(ctx):
     """
-    Detects VSTO runtime DLLs in Visual Studio installation.
+    Detects VSTO runtime DLLs in Visual Studio installation or GAC.
 
-    Location: Visual Studio installation / Common7/IDE/ReferenceAssemblies/v4.0/
-    or: C:/Program Files/Microsoft Visual Studio/2022/[Edition]/Common7/IDE/ReferenceAssemblies/v4.0/
+    Tries these locations in order:
+    1. Explicit path from runtime_path attribute
+    2. Visual Studio ReferenceAssemblies/v4.0
+    3. Visual Studio PublicAssemblies
+    4. Windows GAC (C:/Windows/Microsoft.NET/assembly/GAC_MSIL)
     """
 
     # Try explicit path first
@@ -174,10 +187,14 @@ def _vsto_runtime_register_impl(ctx):
     # List of VSTO runtime assemblies to import
     vsto_assemblies = [
         "Microsoft.Office.Tools.Common",
+        "Microsoft.Office.Tools.Common.Implementation",
         "Microsoft.Office.Tools.Excel",
+        "Microsoft.Office.Tools.Excel.Implementation",
         "Microsoft.Office.Tools.Excel.v4.0.Utilities",
         "Microsoft.Office.Tools.Word",
+        "Microsoft.Office.Tools.Word.Implementation",
         "Microsoft.Office.Tools.Outlook",
+        "Microsoft.Office.Tools.Outlook.Implementation",
         "Microsoft.Office.Tools.v4.0.Framework",
         "Microsoft.Office.Tools",
         "Microsoft.VisualStudio.Tools.Applications.Runtime",
@@ -192,10 +209,30 @@ load("@rules_dotnet_framework//dotnet:defs.bzl", "net_import_library")
 
 '''
 
+    # Windows GAC paths for .Implementation DLLs (fallback)
+    gac_base = "C:/Windows/Microsoft.NET/assembly/GAC_MSIL"
+
     for assembly in vsto_assemblies:
         dll_path = ctx.path(str(runtime_path) + "/" + assembly + ".dll")
+        dll_found = False
+
+        # Try Visual Studio path first
         if dll_path.exists:
             ctx.symlink(dll_path, assembly + ".dll")
+            dll_found = True
+        # Try GAC as fallback (for .Implementation DLLs)
+        else:
+            gac_dll_path = ctx.path("{}/{}/v4.0_10.0.0.0__b03f5f7f11d50a3a/{}.dll".format(
+                gac_base,
+                assembly,
+                assembly,
+            ))
+            if gac_dll_path.exists:
+                ctx.symlink(gac_dll_path, assembly + ".dll")
+                dll_found = True
+
+        # Create target if DLL was found
+        if dll_found:
             build_content += '''net_import_library(
     name = "{name}",
     src = "{name}.dll",

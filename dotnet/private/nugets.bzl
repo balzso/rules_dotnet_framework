@@ -162,6 +162,7 @@ def dotnet_repositories_nugets():
 
     # Office Primary Interop Assemblies for VSTO development
     # These are automatically added as dependencies by net_vsto_addin rule
+    # NOTE: Target name is "net" to be consistent with nuget_package convention
     dotnet_nuget_new(
         name = "microsoft.office.interop.excel",
         package = "Microsoft.Office.Interop.Excel",
@@ -170,7 +171,7 @@ def dotnet_repositories_nugets():
         build_file_content = """
 load("@rules_dotnet_framework//dotnet:defs.bzl", "net_import_library")
 net_import_library(
-    name = "lib",
+    name = "net",
     src = "lib/net20/Microsoft.Office.Interop.Excel.dll",
     version = "0.0.0.0",
     visibility = ["//visibility:public"],
@@ -186,7 +187,7 @@ net_import_library(
         build_file_content = """
 load("@rules_dotnet_framework//dotnet:defs.bzl", "net_import_library")
 net_import_library(
-    name = "lib",
+    name = "net",
     src = "lib/net20/Microsoft.Office.Interop.Word.dll",
     version = "0.0.0.0",
     visibility = ["//visibility:public"],
@@ -202,7 +203,7 @@ net_import_library(
         build_file_content = """
 load("@rules_dotnet_framework//dotnet:defs.bzl", "net_import_library")
 net_import_library(
-    name = "lib",
+    name = "net",
     src = "lib/net20/Microsoft.Office.Interop.Outlook.dll",
     version = "0.0.0.0",
     visibility = ["//visibility:public"],
@@ -218,7 +219,7 @@ net_import_library(
         build_file_content = """
 load("@rules_dotnet_framework//dotnet:defs.bzl", "net_import_library")
 net_import_library(
-    name = "lib",
+    name = "net",
     src = "lib/net20/Microsoft.Office.Interop.PowerPoint.dll",
     version = "0.0.0.0",
     visibility = ["//visibility:public"],
