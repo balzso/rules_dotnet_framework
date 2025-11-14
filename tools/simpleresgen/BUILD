@@ -18,5 +18,6 @@ net_binary(
     visibility = ["//visibility:public"],
     deps = [
         "@rules_dotnet_framework//dotnet/stdlib.net:system.dll",
+        "@rules_dotnet_framework//dotnet/stdlib.net:system.windows.forms.dll",
     ],
 )

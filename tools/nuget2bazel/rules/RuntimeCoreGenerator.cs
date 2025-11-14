@@ -23,14 +23,17 @@ namespace nuget2bazel.rules
         {
             foreach (var tfm in SdkInfos.Sdks)
             {
-                await using var f = new StreamWriter(Path.Combine(_rulesPath, $"dotnet/stdlib.core/{tfm.Version}/generated2.bzl"));
-
-                await Handle(f, tfm, false);
+                using (var f = new StreamWriter(Path.Combine(_rulesPath, $"dotnet/stdlib.core/{tfm.Version}/generated2.bzl")))
+                {
+                    await Handle(f, tfm, false);
+                }
             }
 
             var defSdk = SdkInfos.Sdks.First(x => x.DefaultSdk);
-            await using var fd = new StreamWriter(Path.Combine(_rulesPath, $"dotnet/stdlib.core/generated2.bzl"));
-            await Handle(fd, defSdk, true);
+            using (var fd = new StreamWriter(Path.Combine(_rulesPath, $"dotnet/stdlib.core/generated2.bzl")))
+            {
+                await Handle(fd, defSdk, true);
+            }
         }
 
         private async Task Handle(StreamWriter f, Sdk sdk, bool defaultSdk)
@@ -147,31 +150,33 @@ namespace nuget2bazel.rules
             var dlls = Directory.GetFiles(sdkDir, "*.dll");
 
             var resolver = new PathAssemblyResolver(dlls);
-            using var lc = new MetadataLoadContext(resolver);
-            var known = dlls.Select(x => Path.GetFileNameWithoutExtension(x).ToLower()).ToArray();
-            foreach (var d in dlls)
+            using (var lc = new MetadataLoadContext(resolver))
             {
-                try
+                var known = dlls.Select(x => Path.GetFileNameWithoutExtension(x).ToLower()).ToArray();
+                foreach (var d in dlls)
                 {
-                    var metadata = lc.LoadFromAssemblyPath(d);
-                    var deps = metadata.GetReferencedAssemblies();
-                    var depNames = deps
-                        .Where(y => !brokenDependencies.Contains(y.Name.ToLower()) && known.Contains(y.Name.ToLower()))
-                        .Select(x => $"\":{x.Name.ToLower()}.dll\"");
-                    var name = Path.GetFileName(d);
+                    try
+                    {
+                        var metadata = lc.LoadFromAssemblyPath(d);
+                        var deps = metadata.GetReferencedAssemblies();
+                        var depNames = deps
+                            .Where(y => !brokenDependencies.Contains(y.Name.ToLower()) && known.Contains(y.Name.ToLower()))
+                            .Select(x => $"\":{x.Name.ToLower()}.dll\"");
+                        var name = Path.GetFileName(d);
 
-                    var refInfo = new RefInfo();
-                    refInfo.Name = name.ToLower();
-                    refInfo.Version = metadata.GetName().Version.ToString();
-                    refInfo.StdlibPath =
-                        $"@core_sdk_{sdk.Version}//:core/shared/Microsoft.NETCore.App/{sdk.InternalVersionFolder}/{name}";
-                    refInfo.Ref =
-                        $"@core_sdk_{sdk.Version}//:core/shared/Microsoft.NETCore.App/{sdk.InternalVersionFolder}/{name}";
-                    refInfo.Deps.AddRange(depNames);
-                    result.Add(refInfo);
-                }
-                catch (Exception)
-                {
+                        var refInfo = new RefInfo();
+                        refInfo.Name = name.ToLower();
+                        refInfo.Version = metadata.GetName().Version.ToString();
+                        refInfo.StdlibPath =
+                            $"@core_sdk_{sdk.Version}//:core/shared/Microsoft.NETCore.App/{sdk.InternalVersionFolder}/{name}";
+                        refInfo.Ref =
+                            $"@core_sdk_{sdk.Version}//:core/shared/Microsoft.NETCore.App/{sdk.InternalVersionFolder}/{name}";
+                        refInfo.Deps.AddRange(depNames);
+                        result.Add(refInfo);
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
             }
 

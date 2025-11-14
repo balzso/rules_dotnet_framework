@@ -39,8 +39,9 @@ namespace nuget2bazel.rules
             var stdlibCoreGenerator3 = new StdlibCoreGenerator3(configDir, path);
             await stdlibCoreGenerator3.Do();
 
-            var stdlibMonoGenerator = new StdlibMonoGenerator(configDir, path);
-            await stdlibMonoGenerator.Do();
+            // Mono support removed in rules_dotnet_framework fork
+            // var stdlibMonoGenerator = new StdlibMonoGenerator(configDir, path);
+            // await stdlibMonoGenerator.Do();
         }
     }
 }

@@ -33,23 +33,26 @@ namespace nuget2bazel.rules
 
         private static void UnzipFile(string file, string dir)
         {
-            using var archive = ZipFile.OpenRead(file);
-            foreach (var entry in archive.Entries)
+            using (var archive = ZipFile.OpenRead(file))
             {
-                var dest = Path.Combine(dir, entry.FullName);
-                Directory.CreateDirectory(Path.GetDirectoryName(dest));
-                if (!File.Exists(dest))
-                    entry.ExtractToFile(dest);
+                foreach (var entry in archive.Entries)
+                {
+                    var dest = Path.Combine(dir, entry.FullName);
+                    Directory.CreateDirectory(Path.GetDirectoryName(dest));
+                    if (!File.Exists(dest))
+                        entry.ExtractToFile(dest);
+                }
             }
         }
 
         private static void UntarFile(string file, string dir)
         {
-            using var instream = File.OpenRead(file);
-            using var decompressed = new GZipStream(instream, CompressionMode.Decompress);
-            using var archive = TarArchive.CreateInputTarArchive(decompressed);
-
-            archive.ExtractContents(dir);
+            using (var instream = File.OpenRead(file))
+            using (var decompressed = new GZipStream(instream, CompressionMode.Decompress))
+            using (var archive = TarArchive.CreateInputTarArchive(decompressed))
+            {
+                archive.ExtractContents(dir);
+            }
         }
     }
 }

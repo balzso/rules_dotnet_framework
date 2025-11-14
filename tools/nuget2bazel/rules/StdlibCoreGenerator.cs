@@ -30,36 +30,38 @@ namespace nuget2bazel.rules
 
         private async Task GenerateBazelFile(string outpath, List<RefInfo> libs)
         {
-            await using var f = new StreamWriter(outpath);
-            await f.WriteLineAsync("load(\"@rules_dotnet_framework//dotnet/private:rules/stdlib.bzl\", \"core_stdlib_internal\")");
-            await f.WriteLineAsync("load(\"@rules_dotnet_framework//dotnet/private:rules/libraryset.bzl\", \"core_libraryset\")");
-            await f.WriteLineAsync();
-            await f.WriteLineAsync("def define_stdlib(context_data):");
-
-            await f.WriteLineAsync("    core_libraryset(");
-            await f.WriteLineAsync("        name = \"libraryset\",");
-            await f.WriteLineAsync("        deps = [");
-            foreach (var d in libs)
+            using (var f = new StreamWriter(outpath))
             {
-                await f.WriteLineAsync($"            \":{d.Name}\",");
-            }
-            await f.WriteLineAsync("        ],");
-            await f.WriteLineAsync("    )");
+                await f.WriteLineAsync("load(\"@rules_dotnet_framework//dotnet/private:rules/stdlib.bzl\", \"core_stdlib_internal\")");
+                await f.WriteLineAsync("load(\"@rules_dotnet_framework//dotnet/private:rules/libraryset.bzl\", \"core_libraryset\")");
+                await f.WriteLineAsync();
+                await f.WriteLineAsync("def define_stdlib(context_data):");
 
-            foreach (var d in libs)
-            {
-                await f.WriteLineAsync($"    core_stdlib_internal(");
-                await f.WriteLineAsync($"        name = \"{d.Name}\",");
-                await f.WriteLineAsync($"        version = \"{d.Version}\",");
-                if (d.Ref != null)
-                    await f.WriteLineAsync($"        ref = \"{d.Ref}\",");
-                if (d.StdlibPath != null)
-                    await f.WriteLineAsync($"        stdlib_path = \"{d.StdlibPath}\",");
-                await f.WriteLineAsync($"        deps = [");
-                foreach (var dep in d.Deps)
-                    await f.WriteLineAsync($"            {dep},");
-                await f.WriteLineAsync($"        ]");
-                await f.WriteLineAsync($"    )");
+                await f.WriteLineAsync("    core_libraryset(");
+                await f.WriteLineAsync("        name = \"libraryset\",");
+                await f.WriteLineAsync("        deps = [");
+                foreach (var d in libs)
+                {
+                    await f.WriteLineAsync($"            \":{d.Name}\",");
+                }
+                await f.WriteLineAsync("        ],");
+                await f.WriteLineAsync("    )");
+
+                foreach (var d in libs)
+                {
+                    await f.WriteLineAsync($"    core_stdlib_internal(");
+                    await f.WriteLineAsync($"        name = \"{d.Name}\",");
+                    await f.WriteLineAsync($"        version = \"{d.Version}\",");
+                    if (d.Ref != null)
+                        await f.WriteLineAsync($"        ref = \"{d.Ref}\",");
+                    if (d.StdlibPath != null)
+                        await f.WriteLineAsync($"        stdlib_path = \"{d.StdlibPath}\",");
+                    await f.WriteLineAsync($"        deps = [");
+                    foreach (var dep in d.Deps)
+                        await f.WriteLineAsync($"            {dep},");
+                    await f.WriteLineAsync($"        ]");
+                    await f.WriteLineAsync($"    )");
+                }
             }
         }
     }

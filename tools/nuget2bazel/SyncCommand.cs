@@ -31,7 +31,7 @@ namespace nuget2bazel
             var logger = new Logger();
 
             var packagesJsonPath = Path.Combine(prjConfig.RootPath, prjConfig.Nuget2BazelConfigName);
-            var s = await File.ReadAllTextAsync(packagesJsonPath);
+            var s = File.ReadAllText(packagesJsonPath);
             var packagesJson = JsonConvert.DeserializeObject<PackagesJson>(s);
 
             foreach (var d in packagesJson.dependencies)

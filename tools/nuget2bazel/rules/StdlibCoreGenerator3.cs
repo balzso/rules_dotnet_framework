@@ -44,50 +44,52 @@ namespace nuget2bazel.rules
 
         private async Task GenerateBazelFile(string outpath, List<RefInfo> packRefs)
         {
-            await using var f = new StreamWriter(outpath);
-            await f.WriteLineAsync("load(\"@rules_dotnet_framework//dotnet/private:rules/stdlib.bzl\", \"core_stdlib_internal\")");
-            await f.WriteLineAsync("load(\"@rules_dotnet_framework//dotnet/private:rules/libraryset.bzl\", \"core_libraryset\")");
-            await f.WriteLineAsync();
-            await f.WriteLineAsync("def define_stdlib(context_data):");
-
-            int cnt = 0;
-            foreach (var p in packRefs.Select(x => x.Pack).Distinct())
+            using (var f = new StreamWriter(outpath))
             {
-                var pfx = cnt == 0 ? "" : $"p{cnt}_";
-                await f.WriteLineAsync("    core_libraryset(");
-                if (p == "Microsoft.NETCore.App.Ref")
-                    await f.WriteLineAsync("        name = \"libraryset\",");
-                else
-                    await f.WriteLineAsync($"        name = \"{p.Replace(".Ref", "")}\",");
+                await f.WriteLineAsync("load(\"@rules_dotnet_framework//dotnet/private:rules/stdlib.bzl\", \"core_stdlib_internal\")");
+                await f.WriteLineAsync("load(\"@rules_dotnet_framework//dotnet/private:rules/libraryset.bzl\", \"core_libraryset\")");
+                await f.WriteLineAsync();
+                await f.WriteLineAsync("def define_stdlib(context_data):");
 
-                await f.WriteLineAsync("        deps = [");
-                foreach (var d in packRefs.Where(x => x.Pack == p))
+                int cnt = 0;
+                foreach (var p in packRefs.Select(x => x.Pack).Distinct())
                 {
-                    await f.WriteLineAsync($"            \":{pfx}{d.Name}\",");
-                }
-                await f.WriteLineAsync("        ],");
-                await f.WriteLineAsync("    )");
+                    var pfx = cnt == 0 ? "" : $"p{cnt}_";
+                    await f.WriteLineAsync("    core_libraryset(");
+                    if (p == "Microsoft.NETCore.App.Ref")
+                        await f.WriteLineAsync("        name = \"libraryset\",");
+                    else
+                        await f.WriteLineAsync($"        name = \"{p.Replace(".Ref", "")}\",");
 
-                foreach (var d in packRefs.Where(x => x.Pack == p))
-                {
-                    await f.WriteLineAsync($"    core_stdlib_internal(");
-                    await f.WriteLineAsync($"        name = \"{pfx}{d.Name}\",");
-                    await f.WriteLineAsync($"        version = \"{d.Version}\",");
-                    if (d.Ref != null)
-                        await f.WriteLineAsync($"        ref = \"{d.Ref}\",");
-                    if (d.StdlibPath != null)
-                        await f.WriteLineAsync($"        stdlib_path = \"{d.StdlibPath}\",");
-                    await f.WriteLineAsync($"        deps = [");
-                    foreach (var dep in d.Deps)
+                    await f.WriteLineAsync("        deps = [");
+                    foreach (var d in packRefs.Where(x => x.Pack == p))
                     {
-                        var n = dep.Replace(":", $":{pfx}");
-                        await f.WriteLineAsync($"            {n},");
+                        await f.WriteLineAsync($"            \":{pfx}{d.Name}\",");
                     }
-                    await f.WriteLineAsync($"        ]");
-                    await f.WriteLineAsync($"    )");
-                }
+                    await f.WriteLineAsync("        ],");
+                    await f.WriteLineAsync("    )");
 
-                ++cnt;
+                    foreach (var d in packRefs.Where(x => x.Pack == p))
+                    {
+                        await f.WriteLineAsync($"    core_stdlib_internal(");
+                        await f.WriteLineAsync($"        name = \"{pfx}{d.Name}\",");
+                        await f.WriteLineAsync($"        version = \"{d.Version}\",");
+                        if (d.Ref != null)
+                            await f.WriteLineAsync($"        ref = \"{d.Ref}\",");
+                        if (d.StdlibPath != null)
+                            await f.WriteLineAsync($"        stdlib_path = \"{d.StdlibPath}\",");
+                        await f.WriteLineAsync($"        deps = [");
+                        foreach (var dep in d.Deps)
+                        {
+                            var n = dep.Replace(":", $":{pfx}");
+                            await f.WriteLineAsync($"            {n},");
+                        }
+                        await f.WriteLineAsync($"        ]");
+                        await f.WriteLineAsync($"    )");
+                    }
+
+                    ++cnt;
+                }
             }
         }
     }

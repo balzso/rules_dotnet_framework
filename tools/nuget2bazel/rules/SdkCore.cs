@@ -29,36 +29,38 @@ namespace nuget2bazel.rules
             var frameworkDir = Path.Combine(packageDir, "ref");
             frameworkDir = Directory.GetDirectories(frameworkDir).OrderByDescending(x => x).First();
 
-            var relative = Path.GetRelativePath(packageDir, frameworkDir).Replace('\\', '/');
+            var relative = PathHelper.GetRelativePath(packageDir, frameworkDir).Replace('\\', '/');
             var dlls = Directory.GetFiles(frameworkDir, "*.dll");
 
             var resolver = new PathAssemblyResolver(dlls);
-            using var lc = new MetadataLoadContext(resolver);
-            var known = dlls.Select(x => Path.GetFileNameWithoutExtension(x).ToLower()).ToArray();
-            foreach (var d in dlls)
+            using (var lc = new MetadataLoadContext(resolver))
             {
-                try
+                var known = dlls.Select(x => Path.GetFileNameWithoutExtension(x).ToLower()).ToArray();
+                foreach (var d in dlls)
                 {
-                    var metadata = lc.LoadFromAssemblyPath(d);
-                    var deps = metadata.GetReferencedAssemblies();
-                    var depNames = deps
-                        .Where(y => !brokenDependencies.Contains(y.Name.ToLower()) && known.Contains(y.Name.ToLower()))
-                        .Select(x => $"\":{x.Name.ToLower()}.dll\"");
-                    var name = Path.GetFileName(d);
-                    var refname = $"@Microsoft.NETCore.App.{InternalVersionFolder}//:{relative}/{name}";
-                    var stdlibpath = GetStdlibPath(sdkDir, name, InternalVersionFolder, Version);
+                    try
+                    {
+                        var metadata = lc.LoadFromAssemblyPath(d);
+                        var deps = metadata.GetReferencedAssemblies();
+                        var depNames = deps
+                            .Where(y => !brokenDependencies.Contains(y.Name.ToLower()) && known.Contains(y.Name.ToLower()))
+                            .Select(x => $"\":{x.Name.ToLower()}.dll\"");
+                        var name = Path.GetFileName(d);
+                        var refname = $"@Microsoft.NETCore.App.{InternalVersionFolder}//:{relative}/{name}";
+                        var stdlibpath = GetStdlibPath(sdkDir, name, InternalVersionFolder, Version);
 
-                    var refInfo = new RefInfo();
-                    refInfo.Name = name.ToLower();
-                    refInfo.Version = metadata.GetName().Version.ToString();
-                    refInfo.Ref = refname;
-                    refInfo.StdlibPath = stdlibpath;
-                    refInfo.Pack = null;
-                    refInfo.Deps.AddRange(depNames);
-                    result.Add(refInfo);
-                }
-                catch (Exception)
-                {
+                        var refInfo = new RefInfo();
+                        refInfo.Name = name.ToLower();
+                        refInfo.Version = metadata.GetName().Version.ToString();
+                        refInfo.Ref = refname;
+                        refInfo.StdlibPath = stdlibpath;
+                        refInfo.Pack = null;
+                        refInfo.Deps.AddRange(depNames);
+                        result.Add(refInfo);
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
             }
 
@@ -100,7 +102,7 @@ namespace nuget2bazel.rules
             var result = new List<RefInfo>();
 
             var refDir = GetRefsDir(sdk, pack);
-            var relative = Path.GetRelativePath(sdk, refDir).Replace('\\', '/');
+            var relative = PathHelper.GetRelativePath(sdk, refDir).Replace('\\', '/');
             var dlls = Directory.GetFiles(refDir, "*.dll");
 
             PathAssemblyResolver resolver = null;
@@ -113,33 +115,35 @@ namespace nuget2bazel.rules
             else
                 resolver = new PathAssemblyResolver(dlls);
 
-            using var lc = new MetadataLoadContext(resolver);
-            var known = dlls.Select(x => Path.GetFileNameWithoutExtension(x).ToLower()).ToArray();
-            foreach (var d in dlls)
+            using (var lc = new MetadataLoadContext(resolver))
             {
-                try
+                var known = dlls.Select(x => Path.GetFileNameWithoutExtension(x).ToLower()).ToArray();
+                foreach (var d in dlls)
                 {
-                    var metadata = lc.LoadFromAssemblyPath(d);
-                    var deps = metadata.GetReferencedAssemblies();
-                    var depNames = deps
-                        .Where(y => !brokenDependencies.Contains(y.Name.ToLower()) && known.Contains(y.Name.ToLower()))
-                        .Select(x => $"\":{x.Name.ToLower()}.dll\"");
-                    var name = Path.GetFileName(d);
-                    var refname = $"@core_sdk_{Version}//:core/{relative}/{name}";
-                    var stdlibname = GetStdlibPath(sdk, name, pack, InternalVersionFolder, Version);
+                    try
+                    {
+                        var metadata = lc.LoadFromAssemblyPath(d);
+                        var deps = metadata.GetReferencedAssemblies();
+                        var depNames = deps
+                            .Where(y => !brokenDependencies.Contains(y.Name.ToLower()) && known.Contains(y.Name.ToLower()))
+                            .Select(x => $"\":{x.Name.ToLower()}.dll\"");
+                        var name = Path.GetFileName(d);
+                        var refname = $"@core_sdk_{Version}//:core/{relative}/{name}";
+                        var stdlibname = GetStdlibPath(sdk, name, pack, InternalVersionFolder, Version);
 
-                    var refInfo = new RefInfo();
-                    refInfo.Name = name.ToLower();
-                    refInfo.Version = metadata.GetName().Version.ToString();
-                    refInfo.Ref = refname;
-                    refInfo.StdlibPath = stdlibname;
-                    refInfo.Pack = pack;
-                    refInfo.Deps.AddRange(depNames);
-                    if (stdlibname != null)
-                        result.Add(refInfo);
-                }
-                catch (Exception)
-                {
+                        var refInfo = new RefInfo();
+                        refInfo.Name = name.ToLower();
+                        refInfo.Version = metadata.GetName().Version.ToString();
+                        refInfo.Ref = refname;
+                        refInfo.StdlibPath = stdlibname;
+                        refInfo.Pack = pack;
+                        refInfo.Deps.AddRange(depNames);
+                        if (stdlibname != null)
+                            result.Add(refInfo);
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
             }
 
@@ -171,6 +175,18 @@ namespace nuget2bazel.rules
             return Directory.GetDirectories(refDir).OrderByDescending(x => x).First();
         }
 
+    }
+
+    // Helper class for .NET Framework compatibility
+    internal static class PathHelper
+    {
+        public static string GetRelativePath(string relativeTo, string path)
+        {
+            var relativeToUri = new Uri(relativeTo.EndsWith("\\") ? relativeTo : relativeTo + "\\");
+            var pathUri = new Uri(path);
+            var relativeUri = relativeToUri.MakeRelativeUri(pathUri);
+            return Uri.UnescapeDataString(relativeUri.ToString());
+        }
     }
 
 }

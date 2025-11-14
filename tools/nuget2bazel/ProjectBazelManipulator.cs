@@ -107,7 +107,7 @@ namespace nuget2bazel
 
         private static IEnumerable<PackageDependency> GetDependencies(Nuget2BazelConfig json)
         {
-            return json.externals.Select(x => x.Key.Split("/"))
+            return json.externals.Select(x => x.Key.Split('/'))
                 .Select(y => new PackageDependency(y[0], VersionRange.Parse(y[1])))
                 .Union(json.dependencies.Select(z => new PackageDependency(z.Key, VersionRange.Parse(z.Value))));
         }
@@ -163,8 +163,8 @@ namespace nuget2bazel
             // Unfortunately, the original implementation only returns .prop and .targets files.
             var readerBase = (PackageReaderBase)packageContentReader;
             var dynMethod = readerBase.GetType().BaseType.GetMethod("GetFileGroups", BindingFlags.NonPublic | BindingFlags.Instance);
-            var allBuildFileGroups = (IEnumerable<FrameworkSpecificGroup>)dynMethod.Invoke(readerBase, new object?[] { "build" });
-            var allRuntimes = (IEnumerable<FrameworkSpecificGroup>)dynMethod.Invoke(readerBase, new object?[] { "runtimes" });
+            var allBuildFileGroups = (IEnumerable<FrameworkSpecificGroup>)dynMethod.Invoke(readerBase, new object[] { "build" });
+            var allRuntimes = (IEnumerable<FrameworkSpecificGroup>)dynMethod.Invoke(readerBase, new object[] { "runtimes" });
 
             IEnumerable<FrameworkSpecificGroup> refItemGroups = null;
 
