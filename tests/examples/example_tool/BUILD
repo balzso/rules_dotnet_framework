@@ -1,4 +1,4 @@
-load("@rules_dotnet_framework//dotnet:defs.bzl", "DOTNET_CORE_FRAMEWORKS", "DOTNET_NET_FRAMEWORKS", "core_binary", "dotnet_binary", "net_binary")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "DOTNET_NET_FRAMEWORKS", "dotnet_binary", "net_binary")
 
 dotnet_binary(
     name = "hello_tool.exe",
@@ -10,18 +10,6 @@ dotnet_binary(
         "@rules_dotnet_framework//dotnet/stdlib:system.dll",
     ],
 )
-
-[core_binary(
-    name = "{}_hello_tool_core.exe".format(framework),
-    srcs = [
-        "MyTool.cs",
-    ],
-    dotnet_context_data = "@rules_dotnet_framework//:core_context_data_{}".format(framework),
-    deps = [
-        "//tests/examples/example_lib:{}_MyClass-core.dll".format(framework),
-        "@rules_dotnet_framework//dotnet/stdlib.core/{}:libraryset".format(framework),
-    ],
-) for framework in DOTNET_CORE_FRAMEWORKS]
 
 [net_binary(
     name = "hello_tool_net_{}.exe".format(framework),
@@ -54,17 +42,5 @@ genrule(
     cmd = "$(location :hello_tool.exe) $(OUTS)",
     tools = [
         ":hello_tool.exe",
-    ],
-)
-
-core_binary(
-    name = "hello_tool_core-v2.1.200.exe",
-    srcs = [
-        "MyTool.cs",
-    ],
-    dotnet_context_data = "@rules_dotnet_framework//:core_context_data_v2.1.200",
-    deps = [
-        "//tests/examples/example_lib:MyClass-core-v2.1.200-netstandard.dll",
-        "@rules_dotnet_framework//dotnet/stdlib.core/v2.1.200:libraryset",
     ],
 )

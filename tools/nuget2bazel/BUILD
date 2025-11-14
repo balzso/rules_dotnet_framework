@@ -1,27 +1,27 @@
-load("@rules_dotnet_framework//dotnet:defs.bzl", "core_binary")
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_binary")
 
-core_binary(
+net_binary(
     name = "nuget2bazel.exe",
     srcs = glob([
         "*.cs",
         "rules/*.cs",
     ]),
+    target_framework = "net472",
     visibility = ["//visibility:public"],
     deps = [
-        "@commandlineparser//:core",
-        "@rules_dotnet_framework//dotnet/stdlib.core:libraryset",
-        "@newtonsoft.json//:core",
-        "@nuget.common//:core",
-        "@nuget.configuration//:core",
-        "@nuget.frameworks//:core",
-        "@nuget.packagemanagement.netstandard//:core",
-        "@nuget.packaging.core//:core",
-        "@nuget.packaging//:core",
-        "@nuget.projectmodel//:core",
-        "@nuget.protocol//:core",
-        "@nuget.resolver//:core",
-        "@nuget.versioning//:core",
-        "@sharpziplib//:core",
-        "@system.reflection.metadataloadcontext//:core",
+        "@commandlineparser//:net",
+        "@newtonsoft.json//:net",
+        "@nuget.common//:net",
+        "@nuget.configuration//:net",
+        "@nuget.frameworks//:net",
+        "@nuget.packagemanagement.netstandard//:net",
+        "@nuget.packaging.core//:net",
+        "@nuget.packaging//:net",
+        "@nuget.projectmodel//:net",
+        "@nuget.protocol//:net",
+        "@nuget.resolver//:net",
+        "@nuget.versioning//:net",
+        "@sharpziplib//:net",
+        "@system.reflection.metadataloadcontext//:net",
     ],
 )

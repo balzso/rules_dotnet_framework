@@ -1,4 +1,4 @@
-load("@rules_dotnet_framework//dotnet/stdlib.net/net48:generated.bzl", "define_stdlib")
+load("@rules_dotnet_framework//dotnet/stdlib.net/net472:generated.bzl", "define_stdlib")
 
 package(default_visibility = ["//visibility:public"])
 

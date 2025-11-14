@@ -1,4 +1,12 @@
 # Source version v16.5.0
+# NOTE: This file is NOT SUPPORTED in rules_dotnet_framework.
+# VSTest requires .NET Core which has been intentionally removed from this fork.
+# This fork only supports .NET Framework 4.7-4.7.2 (no .NET Core/5+).
+# If you need VSTest support, use the official bazelbuild/rules_dotnet instead.
+#
+# The code below is left for reference but will not build due to missing
+# .NET Core toolchain and stdlib.core infrastructure.
+
 load("@rules_dotnet_framework//dotnet:defs.bzl", "core_binary", "core_library", "core_resx")
 
 core_library(

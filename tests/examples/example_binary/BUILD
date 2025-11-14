@@ -1,8 +1,6 @@
 load(
     "@rules_dotnet_framework//dotnet:defs.bzl",
-    "DOTNET_CORE_FRAMEWORKS",
     "DOTNET_NET_FRAMEWORKS",
-    "core_binary",
     "dotnet_binary",
     "net_binary",
     "net_com_library",
@@ -19,19 +17,6 @@ dotnet_binary(
         "@newtonsoft.json//:mono",
     ],
 )
-
-[core_binary(
-    name = "{}_hello-core.exe".format(framework),
-    srcs = [
-        "Program.cs",
-    ],
-    dotnet_context_data = "@rules_dotnet_framework//:core_context_data_{}".format(framework),
-    deps = [
-        "//tests/examples/example_lib:{}_MyClass-core.dll".format(framework),
-        "@rules_dotnet_framework//dotnet/stdlib.core/{}:libraryset".format(framework),
-        "@newtonsoft.json//:netcoreapp2.1_core",
-    ],
-) for framework in DOTNET_CORE_FRAMEWORKS]
 
 [net_binary(
     name = "hello-net_{}.exe".format(framework),
