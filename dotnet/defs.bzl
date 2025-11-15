@@ -75,6 +75,13 @@ load(
 #     _net_resource_multi = "net_resource_multi",
 # )
 load(
+    "@rules_dotnet_framework//dotnet/private/rules:resource.bzl",
+    _core_resource = "core_resource",
+    _dotnet_resource = "dotnet_resource",
+    _net_resource = "net_resource",
+    _net_resource_multi = "net_resource_multi",
+)
+load(
     "@rules_dotnet_framework//dotnet/private/rules:stdlib.bzl",
     _core_stdlib = "core_stdlib",
     _core_stdlib_internal = "core_stdlib_internal",
@@ -169,6 +176,10 @@ net_resx_multi = _net_resx_multi
 # net_resource = _net_resource
 # net_resource_multi = _net_resource_multi
 # core_resource_multi = _core_resource_multi
+core_resource = _core_resource
+dotnet_resource = _dotnet_resource
+net_resource = _net_resource
+net_resource_multi = _net_resource_multi
 core_stdlib = _core_stdlib
 core_stdlib_internal = _core_stdlib_internal
 dotnet_stdlib = _dotnet_stdlib

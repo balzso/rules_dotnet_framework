@@ -85,6 +85,23 @@ def _vsto_addin_impl(ctx):
 
     output_files = [library.result]
 
+    # Handle config file if provided
+    config_file = None
+    if ctx.file.config:
+        # Copy and rename config file to match DLL name (e.g., MyAddIn.dll.config)
+        config_file = dotnet.declare_file(
+            dotnet,
+            path = library.result.basename + ".config",
+            sibling = library.result,
+        )
+        dotnet.actions.run_shell(
+            inputs = [ctx.file.config],
+            outputs = [config_file],
+            command = "cp \"{}\" \"{}\"".format(ctx.file.config.path, config_file.path),
+            mnemonic = "CopyConfig",
+        )
+        output_files.append(config_file)
+
     # Generate application manifest if requested
     if ctx.attr.generate_manifests:
         # Generate application manifest (.dll.manifest)
@@ -122,11 +139,16 @@ def _vsto_addin_impl(ctx):
             )
             output_files.extend([signed_app_manifest, signed_vsto_manifest])
 
+    # Collect all runfiles (including config file)
+    additional_runfiles = []
+    if config_file:
+        additional_runfiles.append(config_file)
+
     return [
         library,
         DefaultInfo(
             files = depset(output_files),
-            runfiles = ctx.runfiles(files = [], transitive_files = depset(transitive = [t.runfiles for t in library.transitive])),
+            runfiles = ctx.runfiles(files = additional_runfiles, transitive_files = depset(transitive = [t.runfiles for t in library.transitive])),
         ),
     ]
 
@@ -143,6 +165,10 @@ net_vsto_addin = rule(
         "unsafe": attr.bool(default = False),
         "data": attr.label_list(allow_files = True),
         "keyfile": attr.label(allow_files = True),
+        "config": attr.label(
+            allow_single_file = [".config"],
+            doc = "Optional application configuration file (will be automatically renamed to <name>.dll.config)",
+        ),
         "dotnet_context_data": attr.label(default = Label("@rules_dotnet_framework//:net_context_data")),
         "target_framework": attr.string(
             values = DOTNET_NET_FRAMEWORKS.keys() + [""],
