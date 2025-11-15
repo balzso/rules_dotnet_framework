@@ -96,14 +96,10 @@ def net_vsto_installer(
         defines["ProductName"] = product_name
 
     # VSTO Utilities bindpath
-    # This assumes vsto_utilities_register() has been called in WORKSPACE
-    # The bindpath should point to the external repository
-    bindpaths = {
-        # Note: In WiX, bindpaths are used to locate files referenced in .wxs
-        # The actual path will be resolved by the wix_build action
-        # For now, we'll use a placeholder that will be replaced during build
-        "VsReferenceAssemblies": "../vsto_utilities",
-    }
+    # NOTE: VSTO Utilities DLLs are now included in the staging directory
+    # by the wix_stage action, so no bindpath is needed.
+    # Files.wxs should reference them from $(var.SourceDir) instead.
+    bindpaths = {}
 
     # Merge with any user-provided defines/bindpaths in kwargs
     if "defines" in kwargs:
