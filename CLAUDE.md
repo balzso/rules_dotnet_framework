@@ -144,11 +144,28 @@ Generates `nuget_package()` rules with:
 
 ### Resource Handling
 
+**dotnet/private/rules/resx.bzl**: .resx resource compilation
+- `net_resx` rule - Compiles .resx files to .resources using resgen.exe
+- Primarily for Windows Forms resources (Designer-generated)
+- Returns `DotnetResourceList` provider
+
+**dotnet/private/rules/resource.bzl**: **NEW** Arbitrary resource embedding
+- `net_resource` rule - Embeds binary/text files as resources (XML, images, templates, etc.)
+- `net_resource_multi` rule - Embeds multiple files at once
+- Direct embedding without compilation (unlike .resx)
+- Returns `DotnetResourceList` provider compatible with compilation infrastructure
+
 **dotnet/private/actions/resx.bzl**: Resource compilation dispatcher
+- Routes to `resx_net.bzl` for Framework resource compilation
 
 **dotnet/private/actions/resx_net.bzl**: Framework resource compilation
 - Uses resgen.exe to compile .resx files to .resources
 - Embeds .resources into assemblies
+
+**dotnet/private/actions/assembly_common.bzl**: Resource embedding
+- Lines 129-134: Handles resource embedding via `/resource:` compiler flag
+- `_map_resource()` function combines file path and identifier
+- All resources (from `net_resx` or `net_resource`) embedded uniformly
 
 **tools/simpleresgen/**: Custom resource generator (alternative to resgen.exe)
 - Pure C# implementation for resource compilation
@@ -304,11 +321,23 @@ net_gac(
 
 ### Quick Start
 
-Build a VSTO add-in:
+Build a VSTO add-in with embedded resources and config:
 ```python
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_resource", "net_vsto_addin")
+
+# Embed Ribbon.xml
+net_resource(
+    name = "Ribbon_xml",
+    src = "Ribbon.xml",
+    identifier = "MyAddIn.Ribbon.xml",
+)
+
+# Build add-in
 net_vsto_addin(
     name = "MyExcelAddIn.dll",
-    srcs = ["ThisAddIn.cs", "Ribbon1.cs"],
+    srcs = ["ThisAddIn.cs", "Ribbon.cs"],
+    resources = [":Ribbon_xml"],  # Embedded resources
+    config = "app.config",         # Auto-renamed to MyExcelAddIn.dll.config
     office_app = "Excel",
     office_version = "2016",
     target_framework = "net472",
@@ -323,6 +352,8 @@ net_vsto_addin(
 - Supports Excel, Word, Outlook, PowerPoint
 - Generates ClickOnce manifests (.manifest, .vsto)
 - Authenticode signing support
+- **NEW:** `config` attribute for automatic .dll.config generation
+- **NEW:** Full `resources` attribute support for embedded resources (Ribbon.xml, templates, etc.)
 
 **dotnet/private/vsto/**: VSTO infrastructure
 - `vsto_runtime.bzl` - VSTO runtime detection and dependency management

@@ -115,11 +115,12 @@ bazel build //:MyApp.exe
 - `net_xunit_test` - xUnit test
 
 ### Resource Rules
-- `net_resx` - Compile .resx resource files
-- `net_resource` - Embed resources into assemblies
+- `net_resx` - Compile .resx resource files (Windows Forms resources)
+- `net_resource` - Embed arbitrary binary/text files as resources (XML, images, templates, etc.)
+- `net_resource_multi` - Embed multiple files at once
 
 ### VSTO Rules
-- `net_vsto_addin` - Build VSTO (Office) add-ins with automatic PIA and manifest generation
+- `net_vsto_addin` - Build VSTO (Office) add-ins with automatic PIA and manifest generation, embedded resources, and config file support
 
 ### WiX Rules
 - `wix_package` - Build Windows Installer (.msi) packages

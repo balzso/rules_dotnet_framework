@@ -134,7 +134,8 @@ The `net_vsto_addin` rule builds VSTO add-ins with automatic configuration for O
 | `name` | string | **Required**. Target name, must end with `.dll` |
 | `srcs` | label_list | **Required**. C# source files (`.cs`) |
 | `deps` | label_list | Additional dependencies (DotnetLibrary providers) |
-| `resources` | label_list | Embedded resources (DotnetResourceList providers) |
+| `resources` | label_list | Embedded resources (DotnetResourceList providers). Use with `net_resx` for .resx files or `net_resource` for binary/XML files |
+| `config` | label | **NEW:** Application configuration file (`.config`). Automatically renamed to `<name>.dll.config` |
 | `target_framework` | string | .NET Framework version (`net47`, `net471`, `net472`). Default: `net472` |
 | `keyfile` | label | Strong name key file (`.snk`) |
 | `version` | string | Assembly version (e.g., `"1.0.0.0"`) |
@@ -374,6 +375,297 @@ For production, use one of:
 3. **Group Policy deployment**
    - Deploy via Active Directory
    - Enterprise-wide rollout
+
+## Embedded Resources
+
+### Overview
+
+VSTO add-ins often need to embed binary files (XML, images, Excel templates, etc.) as resources. The `net_resource` rule enables embedding arbitrary files into your assembly.
+
+### net_resource Rule
+
+Embeds a single binary or text file as an embedded resource:
+
+```python
+load("@rules_dotnet_framework//dotnet:defs.bzl", "net_resource", "net_vsto_addin")
+
+net_resource(
+    name = "Ribbon_xml",
+    src = "Ribbon.xml",
+    identifier = "MyAddIn.Ribbon.xml",
+)
+
+net_vsto_addin(
+    name = "MyAddIn.dll",
+    srcs = ["ThisAddIn.cs"],
+    resources = [":Ribbon_xml"],
+    office_app = "Excel",
+)
+```
+
+**Attributes:**
+- `src` (label, required) - File to embed (any file type: .xml, .xlsx, .png, etc.)
+- `identifier` (string, optional) - Resource identifier. If omitted, uses the filename
+
+**Accessing embedded resources at runtime:**
+
+```csharp
+using System.Reflection;
+
+// Load embedded resource
+var assembly = Assembly.GetExecutingAssembly();
+using (var stream = assembly.GetManifestResourceStream("MyAddIn.Ribbon.xml"))
+{
+    // Read resource content
+}
+```
+
+### net_resource_multi Rule
+
+Embeds multiple files at once:
+
+```python
+net_resource_multi(
+    name = "templates",
+    srcs = glob(["Resources/*.xlsx"]),
+    identifierBase = "MyAddIn",  # Creates "MyAddIn.Resources.Template1.xlsx", etc.
+)
+
+net_vsto_addin(
+    name = "MyAddIn.dll",
+    srcs = ["ThisAddIn.cs"],
+    resources = [":templates"],
+    office_app = "Excel",
+)
+```
+
+**Attributes:**
+- `srcs` (label_list, required) - Files to embed
+- `identifierBase` (string) - Base identifier; file paths converted to dotted notation
+- `fixedIdentifierBase` (string) - Fixed base identifier; each file uses this base + filename
+
+### Common Use Cases
+
+#### Ribbon XML
+
+VSTO ribbon customization requires a Ribbon.xml file:
+
+```python
+net_resource(
+    name = "Ribbon_xml",
+    src = "Ribbon.xml",
+    identifier = "MyAddIn.Ribbon.xml",  # Must match the identifier in code
+)
+```
+
+In your Ribbon.cs:
+```csharp
+public string GetCustomUI(string RibbonID)
+{
+    return GetResourceText("MyAddIn.Ribbon.xml");
+}
+
+private static string GetResourceText(string resourceName)
+{
+    var asm = Assembly.GetExecutingAssembly();
+    using (var stream = asm.GetManifestResourceStream(resourceName))
+    using (var reader = new StreamReader(stream))
+    {
+        return reader.ReadToEnd();
+    }
+}
+```
+
+#### Excel Templates
+
+Embed Excel template files for bulk import functionality:
+
+```python
+net_resource(
+    name = "ImportTemplate",
+    src = "Resources/BulkImport.xlsx",
+    identifier = "MyAddIn.Resources.BulkImport.xlsx",
+)
+
+net_vsto_addin(
+    name = "MyAddIn.dll",
+    srcs = ["ThisAddIn.cs", "BulkImport.cs"],
+    resources = [":ImportTemplate"],
+    office_app = "Excel",
+)
+```
+
+Access at runtime:
+```csharp
+byte[] templateBytes;
+using (var stream = Assembly.GetExecutingAssembly()
+    .GetManifestResourceStream("MyAddIn.Resources.BulkImport.xlsx"))
+{
+    using (var ms = new MemoryStream())
+    {
+        stream.CopyTo(ms);
+        templateBytes = ms.ToArray();
+    }
+}
+
+// Save to temp file or use directly with Excel interop
+string tempPath = Path.Combine(Path.GetTempPath(), "import_template.xlsx");
+File.WriteAllBytes(tempPath, templateBytes);
+```
+
+#### Images and Icons
+
+```python
+net_resource(
+    name = "app_icon",
+    src = "Resources/icon.ico",
+    identifier = "MyAddIn.Resources.icon.ico",
+)
+```
+
+### Windows Forms Resources (.resx)
+
+For Windows Forms resources (Designer-generated), use `net_resx`:
+
+```python
+net_resx(
+    name = "MyForm_resx",
+    src = "MyForm.resx",
+    identifier = "MyAddIn.MyForm.resources",
+)
+
+net_vsto_addin(
+    name = "MyAddIn.dll",
+    srcs = ["MyForm.cs", "MyForm.Designer.cs"],
+    resources = [":MyForm_resx"],
+    office_app = "Excel",
+)
+```
+
+**Difference between net_resx and net_resource:**
+- `net_resx` - Compiles .resx files to .resources using resgen.exe (for Windows Forms)
+- `net_resource` - Embeds binary/text files directly (for XML, templates, images, etc.)
+
+## Application Configuration
+
+### config Attribute
+
+The `config` attribute allows you to specify an application configuration file (`.config`) that will be automatically deployed alongside your add-in DLL.
+
+```python
+net_vsto_addin(
+    name = "MyAddIn.dll",
+    srcs = ["ThisAddIn.cs"],
+    config = "app.config",  # Automatically renamed to MyAddIn.dll.config
+    office_app = "Excel",
+)
+```
+
+### Common Configuration Scenarios
+
+#### log4net Configuration
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <configSections>
+    <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler, log4net"/>
+  </configSections>
+
+  <log4net>
+    <root>
+      <level value="ALL"/>
+      <appender-ref ref="RollingFileAppender"/>
+    </root>
+    <appender name="RollingFileAppender" type="log4net.Appender.RollingFileAppender">
+      <file value="${APPDATA}\MyCompany\MyAddIn\log.txt"/>
+      <appendToFile value="true"/>
+      <rollingStyle value="Size"/>
+      <maxSizeRollBackups value="5"/>
+      <maximumFileSize value="5MB"/>
+      <layout type="log4net.Layout.PatternLayout">
+        <conversionPattern value="%date [%thread] %level %logger - %message%newline"/>
+      </layout>
+    </appender>
+  </log4net>
+</configuration>
+```
+
+#### DPI Awareness
+
+```xml
+<configuration>
+  <System.Windows.Forms.ApplicationConfigurationSection>
+    <add key="DpiAwareness" value="PerMonitorV2"/>
+  </System.Windows.Forms.ApplicationConfigurationSection>
+</configuration>
+```
+
+#### Assembly Binding Redirects
+
+```xml
+<configuration>
+  <runtime>
+    <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+      <dependentAssembly>
+        <assemblyIdentity name="Newtonsoft.Json"
+                          publicKeyToken="30ad4fe6b2a6aeed"
+                          culture="neutral"/>
+        <bindingRedirect oldVersion="0.0.0.0-13.0.0.0" newVersion="13.0.0.0"/>
+      </dependentAssembly>
+    </assemblyBinding>
+  </runtime>
+</configuration>
+```
+
+### Full Example with Config
+
+```python
+load("@rules_dotnet_framework//dotnet:defs.bzl",
+     "net_resource", "net_vsto_addin")
+
+# Ribbon XML
+net_resource(
+    name = "Ribbon_xml",
+    src = "Ribbon.xml",
+    identifier = "MyAddIn.Ribbon.xml",
+)
+
+# Excel templates
+net_resource_multi(
+    name = "templates",
+    srcs = glob(["Resources/*.xlsx"]),
+    identifierBase = "MyAddIn",
+)
+
+# Main add-in
+net_vsto_addin(
+    name = "MyAddIn.dll",
+    srcs = [
+        "ThisAddIn.cs",
+        "Ribbon.cs",
+        "BulkImport.cs",
+    ],
+    resources = [
+        ":Ribbon_xml",
+        ":templates",
+    ],
+    config = "app.config",  # log4net + DPI awareness + binding redirects
+    deps = [
+        "@log4net//:net",
+        "@newtonsoft.json//:net",
+    ],
+    office_app = "Excel",
+    target_framework = "net472",
+)
+```
+
+This configuration ensures:
+- ✅ Ribbon UI works (Ribbon.xml embedded)
+- ✅ Template files available at runtime (.xlsx embedded)
+- ✅ log4net logging configured (.dll.config deployed)
+- ✅ High-DPI displays handled correctly
+- ✅ NuGet package version conflicts resolved
 
 ## Advanced Topics
 
