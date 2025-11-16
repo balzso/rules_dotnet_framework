@@ -27,7 +27,8 @@ def emit_application_manifest(
     mage_tool = dotnet.mage
     mage_wrapper = dotnet.mage_wrapper
 
-    # Output manifest file
+    # Output manifest file (temporary, will be post-processed)
+    temp_manifest = dotnet.actions.declare_file(name + ".manifest.tmp")
     manifest = dotnet.actions.declare_file(name + ".manifest")
 
     # Build mage.exe arguments for creating application manifest
@@ -49,7 +50,7 @@ def emit_application_manifest(
     args.add("-New")
     args.add("Application")
     args.add("-ToFile")
-    args.add(manifest.path)
+    args.add(temp_manifest.path)  # Write to temp file first
     args.add("-Name")
     args.add(name)
     args.add("-Version")
@@ -68,9 +69,41 @@ def emit_application_manifest(
         executable = mage_wrapper,
         arguments = [args],
         inputs = [assembly, mage_tool],
-        outputs = [manifest],
+        outputs = [temp_manifest],
         mnemonic = "DotnetApplicationManifest",
         progress_message = "Generating application manifest for {}".format(name),
+    )
+
+    # Post-process manifest to fix assembly identity
+    # mage.exe generates: <assemblyIdentity name="DigitalRobotExcel.exe" ...
+    # We need: <assemblyIdentity name="DigitalRobotExcel.dll" ...
+    assembly_basename = paths.basename(assembly.path)  # e.g., "DigitalRobotExcel.dll"
+    assembly_name_no_ext = assembly_basename.replace(".dll", "")  # e.g., "DigitalRobotExcel"
+
+    fix_script = dotnet.actions.declare_file(name + "_fix_manifest.ps1")
+    fix_script_content = """
+$content = Get-Content '{}' -Raw -Encoding UTF8
+$content = $content -replace 'name="{}.exe"', 'name="{}.dll"'
+Set-Content '{}' -Value $content -Encoding UTF8 -NoNewline
+""".format(
+        temp_manifest.path.replace("/", "\\"),
+        assembly_name_no_ext,
+        assembly_name_no_ext,
+        manifest.path.replace("/", "\\"),
+    )
+
+    dotnet.actions.write(
+        output = fix_script,
+        content = fix_script_content,
+    )
+
+    dotnet.actions.run(
+        executable = "powershell.exe",
+        arguments = ["-ExecutionPolicy", "Bypass", "-File", fix_script.path],
+        inputs = [temp_manifest, fix_script],
+        outputs = [manifest],
+        mnemonic = "FixManifestAssemblyIdentity",
+        progress_message = "Fixing application manifest assembly identity for {}".format(name),
     )
 
     return manifest

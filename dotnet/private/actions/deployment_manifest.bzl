@@ -48,12 +48,15 @@ def emit_deployment_manifest(
     # -Install: Whether to install to Start Menu
     # -ProviderUrl: Update location URL
 
+    # Generate temporary .vsto file (mage.exe creates incorrect codebase paths)
+    temp_vsto = dotnet.actions.declare_file(name + ".vsto.tmp")
+
     args = dotnet.actions.args()
     args.add(mage_tool.path)  # Path to mage.exe
     args.add("-New")
     args.add("Deployment")
     args.add("-ToFile")
-    args.add(vsto_manifest.path)
+    args.add(temp_vsto.path)  # Write to temp file first
     args.add("-Name")
     args.add(name)
     args.add("-Version")
@@ -76,9 +79,36 @@ def emit_deployment_manifest(
         executable = mage_wrapper,
         arguments = [args],
         inputs = [application_manifest, mage_tool],
-        outputs = [vsto_manifest],
+        outputs = [temp_vsto],
         mnemonic = "DotnetDeploymentManifest",
         progress_message = "Generating deployment manifest (.vsto) for {}".format(name),
+    )
+
+    # Post-process .vsto to fix codebase path
+    # mage.exe generates: codebase="/DigitalRobotExcel.manifest"
+    # We need: codebase="DigitalRobotExcel.dll.manifest"
+    manifest_basename = paths.basename(application_manifest.path)
+    manifest_basename_with_dll = manifest_basename.replace(".manifest", ".dll.manifest")
+
+    fix_script = dotnet.actions.declare_file(name + "_fix_vsto.ps1")
+    fix_script_content = """
+$content = Get-Content '{}' -Raw -Encoding UTF8
+$content = $content -replace 'codebase="/[^"]*"', 'codebase="{}"'
+Set-Content '{}' -Value $content -Encoding UTF8 -NoNewline
+""".format(temp_vsto.path.replace("/", "\\"), manifest_basename_with_dll, vsto_manifest.path.replace("/", "\\"))
+
+    dotnet.actions.write(
+        output = fix_script,
+        content = fix_script_content,
+    )
+
+    dotnet.actions.run(
+        executable = "powershell.exe",
+        arguments = ["-ExecutionPolicy", "Bypass", "-File", fix_script.path],
+        inputs = [temp_vsto, fix_script],
+        outputs = [vsto_manifest],
+        mnemonic = "FixVstoCodebase",
+        progress_message = "Fixing .vsto codebase path for {}".format(name),
     )
 
     return vsto_manifest
