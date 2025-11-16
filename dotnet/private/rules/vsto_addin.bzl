@@ -110,6 +110,8 @@ def _vsto_addin_impl(ctx):
             name = name.replace(".dll", ""),
             assembly = library.result,
             deps = all_deps,
+            certificate_file = ctx.file.signing_cert,
+            certificate_password = ctx.attr.cert_password,
         )
         output_files.append(app_manifest)
 
@@ -120,24 +122,10 @@ def _vsto_addin_impl(ctx):
             assembly = library.result,
             application_manifest = app_manifest,
             install_url = ctx.attr.install_url,
+            certificate_file = ctx.file.signing_cert,
+            certificate_password = ctx.attr.cert_password,
         )
         output_files.append(vsto_manifest)
-
-        # Sign manifests if certificate is provided
-        if ctx.file.signing_cert:
-            signed_app_manifest = emit_sign_manifest(
-                dotnet,
-                manifest = app_manifest,
-                cert_file = ctx.file.signing_cert,
-                cert_password = ctx.attr.cert_password,
-            )
-            signed_vsto_manifest = emit_sign_manifest(
-                dotnet,
-                manifest = vsto_manifest,
-                cert_file = ctx.file.signing_cert,
-                cert_password = ctx.attr.cert_password,
-            )
-            output_files.extend([signed_app_manifest, signed_vsto_manifest])
 
     # Collect all runfiles (including config file)
     additional_runfiles = []
