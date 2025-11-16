@@ -360,9 +360,11 @@ net_vsto_addin(
 - `office_pias.bzl` - Office PIA (Primary Interop Assembly) helpers
 
 **dotnet/private/actions/**: Manifest generation and signing
-- `manifest.bzl` - Application manifest generation (mage.exe)
-- `deployment_manifest.bzl` - Deployment manifest (.vsto) generation
-- `sign.bzl` - Authenticode signing (signtool.exe)
+- `manifest.bzl` - Application manifest (.dll.manifest) generation and signing using mage.exe
+- `deployment_manifest.bzl` - Deployment manifest (.vsto) generation and signing using mage.exe
+- `sign.bzl` - MSI Authenticode signing using signtool.exe (separate from manifest signing)
+
+**Important**: Manifest signing uses mage.exe, not signtool.exe. The signing process handles a quirk where mage.exe creates files as ReadOnly but cannot sign ReadOnly files. The build system copies manifests to Windows TEMP, removes ReadOnly attribute, signs in-place, then copies back to Bazel output.
 
 **dotnet/tools/**: VSTO tooling wrappers
 - `mage_wrapper/` - Wrapper for mage.exe (Manifest Generation Tool)
