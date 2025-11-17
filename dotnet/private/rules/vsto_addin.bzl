@@ -163,6 +163,7 @@ def _vsto_addin_impl(ctx):
             name = name.replace(".dll", ""),
             assembly = library.result,
             application_manifest = app_manifest,
+            version = version_string,
             install_url = ctx.attr.install_url,
             certificate_file = ctx.file.signing_cert,
             certificate_password = ctx.attr.cert_password,

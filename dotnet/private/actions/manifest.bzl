@@ -63,6 +63,60 @@ def emit_application_manifest(
 
     # Collect all dependency DLL files from deps
     # This includes transitive dependencies and their runfiles
+    # EXCLUDE: GAC assemblies from stdlib.net (mscorlib, System.*, etc.)
+    # EXCLUDE: .NET Framework facade assemblies (type forwarders that cause VSTO LoadBehavior=2)
+
+    # List of facade assembly names to exclude (these cause ClickOnce manifest validation failures)
+    facade_assemblies = [
+        "Microsoft.Vbe.Interop.dll", "Microsoft.Win32.Primitives.dll",
+        "System.AppContext.dll", "System.Collections.dll", "System.Collections.Concurrent.dll",
+        "System.Collections.NonGeneric.dll", "System.Collections.Specialized.dll",
+        "System.ComponentModel.dll", "System.ComponentModel.Annotations.dll",
+        "System.ComponentModel.EventBasedAsync.dll", "System.ComponentModel.Primitives.dll",
+        "System.ComponentModel.TypeConverter.dll", "System.Console.dll", "System.Data.Common.dll",
+        "System.Diagnostics.Contracts.dll", "System.Diagnostics.Debug.dll",
+        "System.Diagnostics.FileVersionInfo.dll", "System.Diagnostics.Process.dll",
+        "System.Diagnostics.StackTrace.dll", "System.Diagnostics.TextWriterTraceListener.dll",
+        "System.Diagnostics.Tools.dll", "System.Diagnostics.TraceSource.dll",
+        "System.Drawing.Primitives.dll", "System.Dynamic.Runtime.dll",
+        "System.Globalization.dll", "System.Globalization.Calendars.dll",
+        "System.Globalization.Extensions.dll", "System.IO.dll", "System.IO.Compression.ZipFile.dll",
+        "System.IO.FileSystem.dll", "System.IO.FileSystem.DriveInfo.dll",
+        "System.IO.FileSystem.Primitives.dll", "System.IO.FileSystem.Watcher.dll",
+        "System.IO.IsolatedStorage.dll", "System.IO.MemoryMappedFiles.dll",
+        "System.IO.Pipes.dll", "System.IO.UnmanagedMemoryStream.dll",
+        "System.Linq.dll", "System.Linq.Expressions.dll", "System.Linq.Parallel.dll",
+        "System.Linq.Queryable.dll", "System.Net.Http.Rtc.dll", "System.Net.NameResolution.dll",
+        "System.Net.NetworkInformation.dll", "System.Net.Ping.dll", "System.Net.Primitives.dll",
+        "System.Net.Requests.dll", "System.Net.Security.dll", "System.Net.Sockets.dll",
+        "System.Net.WebHeaderCollection.dll", "System.Net.WebSockets.dll",
+        "System.Net.WebSockets.Client.dll", "System.ObjectModel.dll", "System.Reflection.dll",
+        "System.Reflection.Emit.dll", "System.Reflection.Emit.ILGeneration.dll",
+        "System.Reflection.Emit.Lightweight.dll", "System.Reflection.Extensions.dll",
+        "System.Reflection.Primitives.dll", "System.Resources.Reader.dll",
+        "System.Resources.ResourceManager.dll", "System.Resources.Writer.dll",
+        "System.Runtime.dll", "System.Runtime.CompilerServices.VisualC.dll",
+        "System.Runtime.Extensions.dll", "System.Runtime.Handles.dll",
+        "System.Runtime.InteropServices.dll", "System.Runtime.InteropServices.RuntimeInformation.dll",
+        "System.Runtime.InteropServices.WindowsRuntime.dll", "System.Runtime.Numerics.dll",
+        "System.Runtime.Serialization.Formatters.dll", "System.Runtime.Serialization.Json.dll",
+        "System.Runtime.Serialization.Primitives.dll", "System.Runtime.Serialization.Xml.dll",
+        "System.Security.Claims.dll", "System.Security.Cryptography.Algorithms.dll",
+        "System.Security.Cryptography.Csp.dll", "System.Security.Cryptography.Encoding.dll",
+        "System.Security.Cryptography.Primitives.dll", "System.Security.Cryptography.X509Certificates.dll",
+        "System.Security.Principal.dll", "System.Security.SecureString.dll",
+        "System.ServiceModel.Duplex.dll", "System.ServiceModel.Http.dll",
+        "System.ServiceModel.NetTcp.dll", "System.ServiceModel.Primitives.dll",
+        "System.ServiceModel.Security.dll", "System.Text.Encoding.dll",
+        "System.Text.Encoding.Extensions.dll", "System.Text.RegularExpressions.dll",
+        "System.Threading.dll", "System.Threading.Overlapped.dll", "System.Threading.Tasks.dll",
+        "System.Threading.Tasks.Parallel.dll", "System.Threading.Thread.dll",
+        "System.Threading.ThreadPool.dll", "System.Threading.Timer.dll",
+        "System.ValueTuple.dll", "System.Xml.ReaderWriter.dll", "System.Xml.XDocument.dll",
+        "System.Xml.XmlDocument.dll", "System.Xml.XmlSerializer.dll",
+        "System.Xml.XPath.dll", "System.Xml.XPath.XDocument.dll",
+    ]
+
     dependency_files = []
     seen_paths = {}  # Track seen files to avoid duplicates
 
@@ -70,7 +124,10 @@ def emit_application_manifest(
         # Add main result DLL from dependency
         if hasattr(dep, "result") and dep.result and dep.result.path.endswith(".dll"):
             dll_path = dep.result.path
-            if dll_path not in seen_paths:
+            dll_basename = dll_path.split("/")[-1].split("\\")[-1]  # Get filename from path
+
+            # Skip GAC assemblies (from stdlib.net) and facade assemblies (by name)
+            if "stdlib.net" not in dll_path and dll_basename not in facade_assemblies and dll_path not in seen_paths:
                 dependency_files.append(dep.result)
                 seen_paths[dll_path] = True
 
@@ -79,26 +136,14 @@ def emit_application_manifest(
             for runfile in dep.runfiles.to_list():
                 if runfile.path.endswith(".dll"):
                     dll_path = runfile.path
-                    if dll_path not in seen_paths:
+                    dll_basename = dll_path.split("/")[-1].split("\\")[-1]  # Get filename from path
+
+                    # Skip GAC assemblies (from stdlib.net) and facade assemblies (by name)
+                    if "stdlib.net" not in dll_path and dll_basename not in facade_assemblies and dll_path not in seen_paths:
                         dependency_files.append(runfile)
                         seen_paths[dll_path] = True
 
-    # Build dependency XML entries
-    # VSTO manifests use dependentAssembly with dependencyType="preRequisite"
-    dependency_xml = ""
-    for dep_file in dependency_files:
-        dep_basename = paths.basename(dep_file.path)
-        dep_name = dep_basename.replace(".dll", "")
-        # Escape XML special characters
-        dep_name_xml = dep_name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        dependency_xml += """
-  <dependency>
-    <dependentAssembly dependencyType="preRequisite" allowDelayedBinding="true">
-      <assemblyIdentity name="{name}" version="1.0.0.0" publicKeyToken="0000000000000000" language="neutral" processorArchitecture="msil" />
-    </dependentAssembly>
-  </dependency>""".format(name=dep_name_xml)
-
-    # Build ribbonTypes XML entries
+    # Build ribbonTypes XML entries for VSTO customization
     # Required for Excel to load ribbon UI controls
     ribbon_types_xml = ""
     if ribbon_types:
@@ -113,90 +158,284 @@ def emit_application_manifest(
             ribbon_types_xml += "\n              <vstov4.1:ribbonType name=\"{}\" />".format(ribbon_type_full)
         ribbon_types_xml += "\n            </vstov4.1:ribbonTypes>"
 
-    # Generate VSTO manifest XML
-    # Structure based on working VSTO manifest from C:\Temp\DigitalRobotExcel
-    manifest_xml = """<?xml version="1.0" encoding="utf-8"?>
-<asmv1:assembly xsi:schemaLocation="urn:schemas-microsoft-com:asm.v1 assembly.adaptive.xsd" manifestVersion="1.0" xmlns:asmv1="urn:schemas-microsoft-com:asm.v1" xmlns="urn:schemas-microsoft-com:asm.v2" xmlns:asmv2="urn:schemas-microsoft-com:asm.v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:co.v1="urn:schemas-microsoft-com:clickonce.v1" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3" xmlns:dsig="http://www.w3.org/2000/09/xmldsig#" xmlns:co.v2="urn:schemas-microsoft-com:clickonce.v2">
-  <asmv1:assemblyIdentity name="{assembly_name_with_ext}" version="{version}" publicKeyToken="0000000000000000" language="neutral" processorArchitecture="{processor}" type="win32" />
-  <description xmlns="urn:schemas-microsoft-com:asm.v1">{description}</description>
-  <application />
-  <entryPoint>
-    <co.v1:customHostSpecified />
-  </entryPoint>
-  <trustInfo>
-    <security>
-      <applicationRequestMinimum>
-        <PermissionSet Unrestricted="true" ID="Custom" SameSite="site" />
-        <defaultAssemblyRequest permissionSetReference="Custom" />
-      </applicationRequestMinimum>
-      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
-        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
-      </requestedPrivileges>
-    </security>
-  </trustInfo>
-  <dependency>
-    <dependentOS>
-      <osVersionInfo>
-        <os majorVersion="5" minorVersion="1" buildNumber="2600" servicePackMajor="0" />
-      </osVersionInfo>
-    </dependentOS>
-  </dependency>
-  <dependency>
-    <dependentAssembly dependencyType="preRequisite" allowDelayedBinding="true">
-      <assemblyIdentity name="Microsoft.Windows.CommonLanguageRuntime" version="4.0.30319.0" />
-    </dependentAssembly>
-  </dependency>{dependency_xml}
-  <file name="{assembly_basename}" size="{assembly_size}">
-    <hash>
-      <dsig:Transforms>
-        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
-      </dsig:Transforms>
-      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-      <dsig:DigestValue>AAAAAAAAAAAAAAAAAAAAAAAAAAA=</dsig:DigestValue>
-    </hash>
-  </file>
-  <vstav3:addIn xmlns:vstav3="urn:schemas-microsoft-com:vsta.v3">
-    <vstav3:entryPointsCollection>
-      <vstav3:entryPoints>
-        <vstav3:entryPoint class="{entry_point_class}">
-          <assemblyIdentity name="{assembly_name_no_ext}" version="{version}" language="neutral" processorArchitecture="{processor}" />
-        </vstav3:entryPoint>
-      </vstav3:entryPoints>
-    </vstav3:entryPointsCollection>
-    <vstav3:update enabled="true">
-      <vstav3:expiration maximumAge="7" unit="days" />
-    </vstav3:update>
-    <vstav3:application>
-      <vstov4:customizations xmlns:vstov4="urn:schemas-microsoft-com:vsto.v4">
-        <vstov4:customization>
-          <vstov4:appAddIn application="{office_app}" loadBehavior="3" keyName="{assembly_name_no_ext}">
-            <vstov4:friendlyName>{friendly_name}</vstov4:friendlyName>
-            <vstov4:description>{description}</vstov4:description>{ribbon_types_xml}
-          </vstov4:appAddIn>
-        </vstov4:customization>
-      </vstov4:customizations>
-    </vstav3:application>
-  </vstav3:addIn>
-</asmv1:assembly>
-""".format(
-        assembly_name_with_ext = assembly_basename,
-        assembly_name_no_ext = assembly_name_no_ext,
-        version = version,
-        processor = processor_architecture,
-        description = assembly_name_no_ext,
-        dependency_xml = dependency_xml,
-        assembly_basename = assembly_basename,
-        assembly_size = "0",  # Will be replaced by signing tool
-        entry_point_class = entry_point_class,
-        office_app = office_app,
-        friendly_name = friendly_name,
-        ribbon_types_xml = ribbon_types_xml,
+    # Get mage.exe tool (needed for dependency metadata reading)
+    mage_tool = dotnet.mage
+    mage_wrapper = dotnet.mage_wrapper
+
+    # NEW APPROACH: Use MSBuild-generated manifest as template
+    # This ensures we get all GAC dependencies (VSTO runtime, .NET Framework, etc.)
+    # which mage.exe -FromDirectory cannot detect
+    #
+    # Strategy:
+    # 1. Copy MSBuild manifest from bin/Release/AssemblyName.dll.manifest (if exists)
+    # 2. Use mage.exe to update with current DLLs from staging directory
+    # 3. Update VSTO-specific sections (version, ribbonTypes, etc.)
+
+    # Build list of all DLL files to stage (main assembly + dependencies)
+    all_dlls = [assembly] + dependency_files
+    dll_paths_param = ";".join([dll.path for dll in all_dlls])
+
+    generate_script = dotnet.actions.declare_file(name + "_generate_manifest.ps1")
+    generate_script_content = """
+param($mageWrapper, $mageExe, $dllPaths, $outputManifest, $assemblyName, $version, $processor, $entryPoint, $officeApp, $friendlyName, $ribbonTypesXml)
+
+# Try to find MSBuild-generated manifest as template
+$msbuildManifest = "bin/Release/${{assemblyName}}.dll.manifest"
+$templateExists = Test-Path $msbuildManifest
+
+if (-not $templateExists) {{
+    Write-Warning "MSBuild manifest template not found at $msbuildManifest"
+    Write-Warning "Generating minimal manifest. For full dependency list, run 'msbuild /t:Build /p:Configuration=Release' first."
+}}
+
+# Create staging directory in Windows TEMP
+$uniqueId = [guid]::NewGuid().ToString("N").Substring(0, 8)
+$stagingDir = Join-Path $env:TEMP "mage_staging_${{uniqueId}}"
+New-Item -ItemType Directory -Path $stagingDir -Force | Out-Null
+
+try {{
+    # Copy all DLL files to staging directory
+    $dllArray = $dllPaths -split ';'
+    foreach ($dll in $dllArray) {{
+        if (Test-Path $dll) {{
+            $dllName = Split-Path -Leaf $dll
+            Copy-Item $dll (Join-Path $stagingDir $dllName) -Force
+        }}
+    }}
+
+    # Remove GAC assemblies from staging directory before mage.exe processes them
+    # These are .NET Framework base libraries that should NOT be deployed with the app
+    $gacAssemblies = @(
+        'mscorlib.dll', 'System.dll', 'System.Core.dll', 'System.Data.dll',
+        'System.Drawing.dll', 'System.Web.dll', 'System.Windows.Forms.dll',
+        'System.Xml.dll', 'System.Xml.Linq.dll', 'System.Net.Http.dll',
+        'System.Numerics.dll', 'System.Runtime.Serialization.dll',
+        'Microsoft.CSharp.dll', 'Microsoft.VisualBasic.dll',
+        'Microsoft.Build.Framework.dll', 'Microsoft.Build.Tasks.v4.0.dll',
+        'Microsoft.Build.Utilities.v4.0.dll', 'Microsoft.JScript.dll',
+        'System.Configuration.Install.dll', 'System.ComponentModel.DataAnnotations.dll',
+        'System.Data.SqlXml.dll', 'System.Deployment.dll', 'System.DirectoryServices.dll',
+        'System.DirectoryServices.Protocols.dll', 'System.Dynamic.dll',
+        'System.EnterpriseServices.dll', 'System.Management.dll',
+        'System.Runtime.Caching.dll', 'System.Runtime.Serialization.Formatters.Soap.dll',
+        'System.Security.dll', 'System.ServiceProcess.dll',
+        'System.Web.ApplicationServices.dll', 'System.Web.RegularExpressions.dll',
+        'System.Web.Services.dll', 'System.Xaml.dll',
+        'Accessibility.dll', 'PresentationCore.dll', 'PresentationFramework.dll',
+        'WindowsBase.dll', 'WindowsFormsIntegration.dll'
+    )
+    foreach ($gacDll in $gacAssemblies) {{
+        $gacPath = Join-Path $stagingDir $gacDll
+        if (Test-Path $gacPath) {{
+            Remove-Item $gacPath -Force
+        }}
+    }}
+
+    # Remove .NET Framework facade assemblies (type forwarders)
+    # These are small DLLs from the Reference Assemblies that redirect to main GAC assemblies
+    # We keep only the legitimate NuGet package DLLs and application DLLs
+    # Using explicit list (same as dependency collection filter) to ensure consistency
+    $facadeAssemblies = @(
+        'Microsoft.Vbe.Interop.dll', 'Microsoft.Win32.Primitives.dll',
+        'System.AppContext.dll', 'System.Collections.dll', 'System.Collections.Concurrent.dll',
+        'System.Collections.NonGeneric.dll', 'System.Collections.Specialized.dll',
+        'System.ComponentModel.dll', 'System.ComponentModel.Annotations.dll',
+        'System.ComponentModel.EventBasedAsync.dll', 'System.ComponentModel.Primitives.dll',
+        'System.ComponentModel.TypeConverter.dll', 'System.Console.dll', 'System.Data.Common.dll',
+        'System.Diagnostics.Contracts.dll', 'System.Diagnostics.Debug.dll',
+        'System.Diagnostics.FileVersionInfo.dll', 'System.Diagnostics.Process.dll',
+        'System.Diagnostics.StackTrace.dll', 'System.Diagnostics.TextWriterTraceListener.dll',
+        'System.Diagnostics.Tools.dll', 'System.Diagnostics.TraceSource.dll',
+        'System.Diagnostics.Tracing.dll', 'System.Drawing.Primitives.dll',
+        'System.Dynamic.Runtime.dll', 'System.Globalization.dll',
+        'System.Globalization.Calendars.dll', 'System.Globalization.Extensions.dll',
+        'System.IO.dll', 'System.IO.Compression.dll', 'System.IO.Compression.ZipFile.dll',
+        'System.IO.FileSystem.dll', 'System.IO.FileSystem.DriveInfo.dll',
+        'System.IO.FileSystem.Primitives.dll', 'System.IO.FileSystem.Watcher.dll',
+        'System.IO.IsolatedStorage.dll', 'System.IO.MemoryMappedFiles.dll',
+        'System.IO.Pipes.dll', 'System.IO.UnmanagedMemoryStream.dll',
+        'System.Linq.dll', 'System.Linq.Expressions.dll', 'System.Linq.Parallel.dll',
+        'System.Linq.Queryable.dll', 'System.Net.Http.dll', 'System.Net.NameResolution.dll',
+        'System.Net.NetworkInformation.dll', 'System.Net.Ping.dll', 'System.Net.Primitives.dll',
+        'System.Net.Requests.dll', 'System.Net.Security.dll', 'System.Net.Sockets.dll',
+        'System.Net.WebHeaderCollection.dll', 'System.Net.WebSockets.Client.dll',
+        'System.Net.WebSockets.dll', 'System.ObjectModel.dll', 'System.Reflection.dll',
+        'System.Reflection.Extensions.dll', 'System.Reflection.Primitives.dll',
+        'System.Resources.Reader.dll', 'System.Resources.ResourceManager.dll',
+        'System.Resources.Writer.dll', 'System.Runtime.dll',
+        'System.Runtime.CompilerServices.VisualC.dll', 'System.Runtime.Extensions.dll',
+        'System.Runtime.Handles.dll', 'System.Runtime.InteropServices.dll',
+        'System.Runtime.InteropServices.RuntimeInformation.dll', 'System.Runtime.Numerics.dll',
+        'System.Runtime.Serialization.Formatters.dll', 'System.Runtime.Serialization.Json.dll',
+        'System.Runtime.Serialization.Primitives.dll', 'System.Runtime.Serialization.Xml.dll',
+        'System.Security.Claims.dll', 'System.Security.Cryptography.Algorithms.dll',
+        'System.Security.Cryptography.Csp.dll', 'System.Security.Cryptography.Encoding.dll',
+        'System.Security.Cryptography.Primitives.dll', 'System.Security.Cryptography.X509Certificates.dll',
+        'System.Security.Principal.dll', 'System.Security.SecureString.dll',
+        'System.ServiceModel.Duplex.dll', 'System.ServiceModel.Http.dll',
+        'System.ServiceModel.NetTcp.dll', 'System.ServiceModel.Primitives.dll',
+        'System.ServiceModel.Security.dll', 'System.Text.Encoding.dll',
+        'System.Text.Encoding.Extensions.dll', 'System.Text.RegularExpressions.dll',
+        'System.Threading.dll', 'System.Threading.Overlapped.dll', 'System.Threading.Tasks.dll',
+        'System.Threading.Tasks.Parallel.dll', 'System.Threading.Thread.dll',
+        'System.Threading.ThreadPool.dll', 'System.Threading.Timer.dll',
+        'System.ValueTuple.dll', 'System.Xml.ReaderWriter.dll', 'System.Xml.XDocument.dll',
+        'System.Xml.XmlDocument.dll', 'System.Xml.XmlSerializer.dll',
+        'System.Xml.XPath.dll', 'System.Xml.XPath.XDocument.dll'
     )
 
-    # Write unsigned manifest XML
+    Get-ChildItem -Path $stagingDir -Filter '*.dll' -ErrorAction SilentlyContinue | Where-Object {{
+        $_.Name -in $facadeAssemblies
+    }} | ForEach-Object {{
+        Remove-Item $_.FullName -Force
+    }}
+
+    if ($templateExists) {{
+        # Use MSBuild manifest as template (copy to staging dir)
+        $tempManifest = Join-Path $stagingDir "temp.manifest"
+        Copy-Item $msbuildManifest $tempManifest -Force
+
+        # NOTE: We don't run mage.exe -Update because it would fail trying to find GAC assemblies
+        # The MSBuild manifest already has all the correct dependency metadata
+        # We'll just update the version and VSTO sections below
+    }} else {{
+        # Fallback: Generate minimal manifest with mage.exe
+        $tempManifest = Join-Path $stagingDir "temp.manifest"
+        $mageArgs = @($mageExe, '-New', 'Application', '-FromDirectory', $stagingDir, '-ToFile', $tempManifest, '-Version', $version, '-Processor', $processor)
+        $process = Start-Process -FilePath $mageWrapper -ArgumentList $mageArgs -Wait -PassThru -NoNewWindow
+
+        if ($process.ExitCode -ne 0) {{
+            Write-Error "mage.exe -New failed with exit code $($process.ExitCode)"
+            exit $process.ExitCode
+        }}
+    }}
+
+    if (-not (Test-Path $tempManifest)) {{
+        Write-Error "Manifest file not created at $tempManifest"
+        exit 1
+    }}
+
+    # Read manifest XML
+    [xml]$manifest = Get-Content $tempManifest
+
+    # Update assemblyIdentity with current version
+    $manifest.assembly.assemblyIdentity.version = $version
+    $manifest.assembly.assemblyIdentity.name = "${{assemblyName}}.dll"
+
+    # Remove existing vstav3:addIn element if present (from template)
+    $vstoNs = "urn:schemas-microsoft-com:vsta.v3"
+    $nsmgr = New-Object Xml.XmlNamespaceManager($manifest.NameTable)
+    $nsmgr.AddNamespace("vstav3", $vstoNs)
+    $existingAddIn = $manifest.assembly.SelectSingleNode("//vstav3:addIn", $nsmgr)
+    if ($existingAddIn) {{
+        $manifest.assembly.RemoveChild($existingAddIn) | Out-Null
+    }}
+
+    # Create new VSTO addIn element
+    $vsto4Ns = "urn:schemas-microsoft-com:vsto.v4"
+    $addInElement = $manifest.CreateElement("vstav3", "addIn", $vstoNs)
+
+    # entryPointsCollection
+    $entryPointsCollection = $manifest.CreateElement("vstav3", "entryPointsCollection", $vstoNs)
+    $entryPoints = $manifest.CreateElement("vstav3", "entryPoints", $vstoNs)
+    $entryPointElem = $manifest.CreateElement("vstav3", "entryPoint", $vstoNs)
+    $entryPointElem.SetAttribute("class", $entryPoint)
+
+    $assemblyIdentity = $manifest.CreateElement("assemblyIdentity", "urn:schemas-microsoft-com:asm.v2")
+    $assemblyIdentity.SetAttribute("name", $assemblyName)
+    $assemblyIdentity.SetAttribute("version", $version)
+    $assemblyIdentity.SetAttribute("language", "neutral")
+    $assemblyIdentity.SetAttribute("processorArchitecture", $processor)
+
+    $entryPointElem.AppendChild($assemblyIdentity) | Out-Null
+    $entryPoints.AppendChild($entryPointElem) | Out-Null
+    $entryPointsCollection.AppendChild($entryPoints) | Out-Null
+    $addInElement.AppendChild($entryPointsCollection) | Out-Null
+
+    # update element
+    $update = $manifest.CreateElement("vstav3", "update", $vstoNs)
+    $update.SetAttribute("enabled", "true")
+    $expiration = $manifest.CreateElement("vstav3", "expiration", $vstoNs)
+    $expiration.SetAttribute("maximumAge", "7")
+    $expiration.SetAttribute("unit", "days")
+    $update.AppendChild($expiration) | Out-Null
+    $addInElement.AppendChild($update) | Out-Null
+
+    # application/customizations element
+    $application = $manifest.CreateElement("vstav3", "application", $vstoNs)
+    $customizations = $manifest.CreateElement("vstov4", "customizations", $vsto4Ns)
+    $customization = $manifest.CreateElement("vstov4", "customization", $vsto4Ns)
+    $appAddIn = $manifest.CreateElement("vstov4", "appAddIn", $vsto4Ns)
+    $appAddIn.SetAttribute("application", $officeApp)
+    $appAddIn.SetAttribute("loadBehavior", "3")
+    $appAddIn.SetAttribute("keyName", $assemblyName)
+
+    $friendlyNameElem = $manifest.CreateElement("vstov4", "friendlyName", $vsto4Ns)
+    $friendlyNameElem.InnerText = $friendlyName
+    $appAddIn.AppendChild($friendlyNameElem) | Out-Null
+
+    $descriptionElem = $manifest.CreateElement("vstov4", "description", $vsto4Ns)
+    $descriptionElem.InnerText = $assemblyName
+    $appAddIn.AppendChild($descriptionElem) | Out-Null
+
+    # Add ribbonTypes if provided
+    if ($ribbonTypesXml) {{
+        # Parse ribbon types XML fragment and append
+        $ribbonFragment = [xml]("<root xmlns:vstov4.1='urn:schemas-microsoft-com:vsto.v4.1'>$ribbonTypesXml</root>")
+        $importedNode = $manifest.ImportNode($ribbonFragment.root.ribbonTypes, $true)
+        $appAddIn.AppendChild($importedNode) | Out-Null
+    }}
+
+    $customization.AppendChild($appAddIn) | Out-Null
+    $customizations.AppendChild($customization) | Out-Null
+    $application.AppendChild($customizations) | Out-Null
+    $addInElement.AppendChild($application) | Out-Null
+
+    # Append VSTO addIn to root assembly element
+    $manifest.assembly.AppendChild($addInElement) | Out-Null
+
+    # Save modified manifest to output
+    $manifest.Save($outputManifest)
+
+    if (-not (Test-Path $outputManifest)) {{
+        Write-Error "Failed to save manifest to $outputManifest"
+        exit 1
+    }}
+}} finally {{
+    # Clean up staging directory
+    if (Test-Path $stagingDir) {{
+        Remove-Item $stagingDir -Recurse -Force -ErrorAction SilentlyContinue
+    }}
+}}
+""".format()
+
     dotnet.actions.write(
-        output = unsigned_manifest,
-        content = manifest_xml,
+        output = generate_script,
+        content = generate_script_content,
+    )
+
+    # Execute manifest generation script
+    dotnet.actions.run(
+        executable = "powershell.exe",
+        arguments = [
+            "-ExecutionPolicy", "Bypass",
+            "-File", generate_script.path,
+            mage_wrapper.path,
+            mage_tool.path,
+            dll_paths_param,
+            unsigned_manifest.path,
+            assembly_name_no_ext,
+            version,
+            processor_architecture,
+            entry_point_class,
+            office_app,
+            friendly_name,
+            ribbon_types_xml,
+        ],
+        inputs = [generate_script, mage_wrapper, mage_tool] + all_dlls,
+        outputs = [unsigned_manifest],
+        mnemonic = "GenerateApplicationManifest",
+        progress_message = "Generating application manifest for {}".format(name),
     )
 
     # Sign manifest if certificate file is provided
@@ -223,7 +462,8 @@ $file = Get-Item $tempManifest
 $file.IsReadOnly = $false
 
 # Sign the manifest in-place (wrapper expects: mage_wrapper.exe mage.exe [args...])
-$mageArgs = @($mageExe, '-Sign', $tempManifest, '-CertFile', $cert, '-Password', $pwd, '-ToFile', $tempManifest)
+# Use SHA256RSA algorithm (SHA1 is deprecated and may be rejected by Office/VSTO runtime)
+$mageArgs = @($mageExe, '-Sign', $tempManifest, '-CertFile', $cert, '-Password', $pwd, '-Algorithm', 'sha256RSA', '-ToFile', $tempManifest)
 $process = Start-Process -FilePath $mageWrapper -ArgumentList $mageArgs -Wait -PassThru -NoNewWindow
 $exitCode = $process.ExitCode
 

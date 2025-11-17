@@ -7,6 +7,7 @@ def emit_deployment_manifest(
         name,
         assembly,
         application_manifest,
+        version = None,
         install_url = None,
         update_enabled = True,
         publisher_name = None,
@@ -19,6 +20,7 @@ def emit_deployment_manifest(
         name: Name of the output manifest file (typically assembly_name + ".vsto")
         assembly: The compiled assembly File object
         application_manifest: The application manifest File object
+        version: Optional version string (e.g., "1.4.68"). Defaults to "1.0.0.0"
         install_url: Optional installation URL for network deployment
         update_enabled: Whether automatic updates are enabled
         publisher_name: Optional publisher name for the add-in
@@ -71,7 +73,7 @@ def emit_deployment_manifest(
     args.add("-Name")
     args.add(name)
     args.add("-Version")
-    args.add("1.0.0.0")  # Default version
+    args.add(version if version else "1.0.0.0")
     args.add("-AppManifest")
     args.add(application_manifest.path)
 
@@ -105,8 +107,28 @@ def emit_deployment_manifest(
     fix_script_content = """
 $content = Get-Content '{}' -Raw -Encoding UTF8
 $content = $content -replace 'codebase="/[^"]*"', 'codebase="{}"'
+# Fix assemblyIdentity name: change ".app" to ".vsto"
+$content = $content -replace 'name="([^"]+)\\.app"', 'name="$1.vsto"'
+# Fix framework version: change 4.8 to 4.7.2 for compatibility
+$content = $content -replace 'targetVersion="4\\.8"', 'targetVersion="4.7.2"'
+# Remove Client profile framework (keep only Full profile for VSTO compatibility)
+$content = $content -replace '\\s*<framework[^>]*profile="Client"[^>]*/?>\\s*\\n?', ''
+
+# Fix SHA1 hash to SHA256 for referenced manifest
+# Calculate SHA256 hash of the .dll.manifest file
+$manifestPath = '{}'
+$sha256 = [System.Security.Cryptography.SHA256]::Create()
+$manifestBytes = [System.IO.File]::ReadAllBytes($manifestPath)
+$hashBytes = $sha256.ComputeHash($manifestBytes)
+$hashBase64 = [System.Convert]::ToBase64String($hashBytes)
+
+# Replace SHA1 DigestMethod with SHA256
+$content = $content -replace '<dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />', '<dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />'
+# Replace the digest value with recalculated SHA256 hash
+$content = $content -replace '(<dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />\\s*<dsig:DigestValue>)[^<]+(</dsig:DigestValue>)', "`$1$hashBase64`$2"
+
 Set-Content '{}' -Value $content -Encoding UTF8 -NoNewline
-""".format(temp_vsto.path.replace("/", "\\"), manifest_basename_with_dll, unsigned_vsto.path.replace("/", "\\"))
+""".format(temp_vsto.path.replace("/", "\\"), manifest_basename_with_dll, application_manifest.path.replace("/", "\\"), unsigned_vsto.path.replace("/", "\\"))
 
     dotnet.actions.write(
         output = fix_script,
@@ -142,7 +164,8 @@ $file = Get-Item $tempManifest
 $file.IsReadOnly = $false
 
 # Sign the .vsto manifest in-place (wrapper expects: mage_wrapper.exe mage.exe [args...])
-$mageArgs = @($mageExe, '-Sign', $tempManifest, '-CertFile', $cert, '-Password', $pwd, '-ToFile', $tempManifest)
+# Use SHA256RSA algorithm (SHA1 is deprecated and may be rejected by Office/VSTO runtime)
+$mageArgs = @($mageExe, '-Sign', $tempManifest, '-CertFile', $cert, '-Password', $pwd, '-Algorithm', 'sha256RSA', '-ToFile', $tempManifest)
 $process = Start-Process -FilePath $mageWrapper -ArgumentList $mageArgs -Wait -PassThru -NoNewWindow
 $exitCode = $process.ExitCode
 
