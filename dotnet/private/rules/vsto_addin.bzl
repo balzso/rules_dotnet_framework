@@ -13,6 +13,23 @@ load("@rules_dotnet_framework//dotnet/private/actions:manifest.bzl", "emit_appli
 load("@rules_dotnet_framework//dotnet/private/actions:deployment_manifest.bzl", "emit_deployment_manifest")
 load("@rules_dotnet_framework//dotnet/private/actions:sign.bzl", "emit_sign_manifest")
 
+def _should_generate_version_attributes(ctx):
+    """
+    Determines if version attributes should be generated in a temporary _tv_.cs file.
+
+    Returns False if AssemblyInfo.cs is found in sources (assumes it contains version attributes).
+    Returns True otherwise (backward compatible - generates version attributes).
+    """
+    # Auto-detect based on AssemblyInfo.cs presence
+    for src in ctx.files.srcs:
+        if src.basename == "AssemblyInfo.cs":
+            # AssemblyInfo.cs found - assume it contains version attributes
+            # Don't generate _tv_.cs to avoid duplicate attribute errors
+            return False
+
+    # No AssemblyInfo.cs found - generate version attributes (backward compatible)
+    return True
+
 def _vsto_addin_impl(ctx):
     """Implementation of net_vsto_addin rule"""
     dotnet = dotnet_context(ctx)
@@ -64,6 +81,13 @@ def _vsto_addin_impl(ctx):
     # based on their label names (checked in assembly_common.bzl)
     all_deps = ctx.attr.deps + pia_deps + vsto_deps + ctx.attr._stdlib
 
+    # Determine if we should generate version attributes (_tv_.cs file)
+    # If AssemblyInfo.cs exists in sources, skip generation to avoid duplicate attributes
+    generate_version = _should_generate_version_attributes(ctx)
+
+    # Parse version for manifest and optional assembly attribute generation
+    version_tuple = (0, 0, 0, 0, "") if ctx.attr.version == "" else parse_version(ctx.attr.version)
+
     # Build the add-in assembly (DLL)
     library = dotnet.assembly(
         dotnet,
@@ -80,7 +104,9 @@ def _vsto_addin_impl(ctx):
         target_framework = ctx.attr.target_framework,
         nowarn = ctx.attr.nowarn,
         langversion = ctx.attr.langversion,
-        version = (0, 0, 0, 0, "") if ctx.attr.version == "" else parse_version(ctx.attr.version),
+        # Only pass version if we should generate version attributes
+        # Otherwise pass (0,0,0,0,"") to skip _tv_.cs generation
+        version = version_tuple if generate_version else (0, 0, 0, 0, ""),
     )
 
     output_files = [library.result]
@@ -104,12 +130,28 @@ def _vsto_addin_impl(ctx):
 
     # Generate application manifest if requested
     if ctx.attr.generate_manifests:
+        # Extract version for manifest
+        # If version attributes were not generated (AssemblyInfo.cs has them),
+        # use version_tuple from attribute; otherwise use library.version
+        manifest_version_tuple = version_tuple if not generate_version else library.version
+
+        # Convert to string format "major.minor.build.revision"
+        version_string = "{}.{}.{}.{}".format(
+            manifest_version_tuple[0],
+            manifest_version_tuple[1],
+            manifest_version_tuple[2],
+            manifest_version_tuple[3],
+        ) if manifest_version_tuple else "1.0.0.0"
+
         # Generate application manifest (.dll.manifest)
         app_manifest = emit_application_manifest(
             dotnet,
             name = name.replace(".dll", ""),
             assembly = library.result,
             deps = all_deps,
+            version = version_string,
+            office_app = ctx.attr.office_app,
+            ribbon_types = ctx.attr.ribbon_types,
             certificate_file = ctx.file.signing_cert,
             certificate_password = ctx.attr.cert_password,
         )
@@ -180,6 +222,10 @@ net_vsto_addin = rule(
         ),
         "install_url": attr.string(
             doc = "Optional installation URL for network deployment",
+        ),
+        "ribbon_types": attr.string_list(
+            default = [],
+            doc = "List of ribbon control class names (e.g., ['MyAddin.RibbonControl']). Required for Excel ribbon UI to load.",
         ),
         "signing_cert": attr.label(
             allow_single_file = [".pfx"],

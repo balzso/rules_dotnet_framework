@@ -132,6 +132,10 @@ load(
     _vsto_runtime_register = "vsto_runtime_register",
 )
 load(
+    "@rules_dotnet_framework//dotnet/private:version_reader.bzl",
+    _version_from_assemblyinfo = "version_from_assemblyinfo",
+)
+load(
     "@rules_dotnet_framework//dotnet/platform:list.bzl",
     _DEFAULT_DOTNET_CORE_FRAMEWORK = "DEFAULT_DOTNET_CORE_FRAMEWORK",
     _DOTNET_CORE_FRAMEWORKS = "DOTNET_CORE_FRAMEWORKS",
@@ -206,6 +210,7 @@ net_gac2 = _net_gac2
 net_gac4 = _net_gac4
 vs2017_ref_net = _vs2017_ref_net
 vsto_runtime_register = _vsto_runtime_register
+version_from_assemblyinfo = _version_from_assemblyinfo
 DOTNET_NET_FRAMEWORKS = _DOTNET_NET_FRAMEWORKS
 DOTNET_CORE_FRAMEWORKS = _DOTNET_CORE_FRAMEWORKS
 DOTNET_CORE_NAMES = _DOTNET_CORE_NAMES

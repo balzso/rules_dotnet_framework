@@ -13,6 +13,7 @@ def emit_application_manifest(
         entry_point_class = None,
         office_app = "Excel",
         friendly_name = None,
+        ribbon_types = [],
         certificate_file = None,
         certificate_password = None):
     """Generates a ClickOnce application manifest (.dll.manifest) for a VSTO add-in.
@@ -32,6 +33,8 @@ def emit_application_manifest(
                           If None, defaults to "{name}.ThisAddIn"
         office_app: Office application name (e.g., "Excel", "Word", "Outlook")
         friendly_name: Display name for the add-in. If None, defaults to name
+        ribbon_types: List of ribbon control class names (e.g., ["MyAddin.RibbonControl"])
+                     Required for Excel ribbon UI to load
         certificate_file: PFX certificate file for Authenticode signing
                          If None, manifest is not signed
         certificate_password: Password for the PFX certificate file
@@ -95,6 +98,21 @@ def emit_application_manifest(
     </dependentAssembly>
   </dependency>""".format(name=dep_name_xml)
 
+    # Build ribbonTypes XML entries
+    # Required for Excel to load ribbon UI controls
+    ribbon_types_xml = ""
+    if ribbon_types:
+        ribbon_types_xml = "\n            <vstov4.1:ribbonTypes xmlns:vstov4.1=\"urn:schemas-microsoft-com:vsto.v4.1\">"
+        for ribbon_type in ribbon_types:
+            # Format: "Namespace.ClassName, AssemblyName, Version=X.Y.Z.W, Culture=neutral, PublicKeyToken=null"
+            ribbon_type_full = "{}, {}, Version={}, Culture=neutral, PublicKeyToken=null".format(
+                ribbon_type,
+                assembly_name_no_ext,
+                version,
+            )
+            ribbon_types_xml += "\n              <vstov4.1:ribbonType name=\"{}\" />".format(ribbon_type_full)
+        ribbon_types_xml += "\n            </vstov4.1:ribbonTypes>"
+
     # Generate VSTO manifest XML
     # Structure based on working VSTO manifest from C:\Temp\DigitalRobotExcel
     manifest_xml = """<?xml version="1.0" encoding="utf-8"?>
@@ -153,7 +171,7 @@ def emit_application_manifest(
         <vstov4:customization>
           <vstov4:appAddIn application="{office_app}" loadBehavior="3" keyName="{assembly_name_no_ext}">
             <vstov4:friendlyName>{friendly_name}</vstov4:friendlyName>
-            <vstov4:description>{description}</vstov4:description>
+            <vstov4:description>{description}</vstov4:description>{ribbon_types_xml}
           </vstov4:appAddIn>
         </vstov4:customization>
       </vstov4:customizations>
@@ -172,6 +190,7 @@ def emit_application_manifest(
         entry_point_class = entry_point_class,
         office_app = office_app,
         friendly_name = friendly_name,
+        ribbon_types_xml = ribbon_types_xml,
     )
 
     # Write unsigned manifest XML
