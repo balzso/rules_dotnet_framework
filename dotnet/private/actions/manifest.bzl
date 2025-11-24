@@ -496,7 +496,8 @@ $file.IsReadOnly = $false
 
 # Sign the manifest in-place (wrapper expects: mage_wrapper.exe mage.exe [args...])
 # Use SHA256RSA algorithm (SHA1 is deprecated and may be rejected by Office/VSTO runtime)
-$mageArgs = @($mageExe, '-Sign', $tempManifest, '-CertFile', $cert, '-Password', $pwd, '-Algorithm', 'sha256RSA', '-ToFile', $tempManifest)
+# Note: Do NOT use -ToFile with same path as input - mage.exe modifies in-place by default
+$mageArgs = @($mageExe, '-Sign', $tempManifest, '-CertFile', $cert, '-Password', $pwd, '-Algorithm', 'sha256RSA')
 $process = Start-Process -FilePath $mageWrapper -ArgumentList $mageArgs -Wait -PassThru -NoNewWindow
 $exitCode = $process.ExitCode
 
@@ -506,11 +507,19 @@ if ($exitCode -ne 0) {{
     exit $exitCode
 }}
 
-# Verify signing succeeded
+# Verify signing succeeded - check that Signature element was added
 if (-not (Test-Path $tempManifest)) {{
     Write-Error "mage.exe did not create signed file at $tempManifest"
     exit 1
 }}
+
+$signedContent = Get-Content $tempManifest -Raw
+if ($signedContent -notmatch '<Signature') {{
+    Write-Error "Signing failed - no Signature element found in manifest"
+    Remove-Item $tempManifest -Force -ErrorAction SilentlyContinue
+    exit 1
+}}
+Write-Host "$([System.IO.Path]::GetFileName($tempManifest)) successfully signed"
 
 # Copy signed manifest to final Bazel output
 Copy-Item $tempManifest $final -Force
