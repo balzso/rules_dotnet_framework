@@ -15,7 +15,8 @@ def emit_application_manifest(
         friendly_name = None,
         ribbon_types = [],
         certificate_file = None,
-        certificate_password = None):
+        certificate_password = None,
+        manifest_template_file = None):
     """Generates a ClickOnce application manifest (.dll.manifest) for a VSTO add-in.
 
     Directly generates the manifest XML to match VSTO structure, avoiding MSBuild
@@ -38,6 +39,10 @@ def emit_application_manifest(
         certificate_file: PFX certificate file for Authenticode signing
                          If None, manifest is not signed
         certificate_password: Password for the PFX certificate file
+        manifest_template_file: Optional MSBuild-generated manifest template file.
+                               If provided, this template is used as a base instead of
+                               generating a minimal manifest with mage.exe. This ensures
+                               all dependencies (including GAC assemblies) are properly listed.
 
     Returns:
         File object for the generated manifest
@@ -177,15 +182,37 @@ def emit_application_manifest(
 
     generate_script = dotnet.actions.declare_file(name + "_generate_manifest.ps1")
     generate_script_content = """
-param($mageWrapper, $mageExe, $dllPaths, $outputManifest, $assemblyName, $version, $processor, $entryPoint, $officeApp, $friendlyName, $ribbonTypesXml)
+param($mageWrapper, $mageExe, $dllPaths, $outputManifest, $assemblyName, $version, $processor, $entryPoint, $officeApp, $friendlyName, $ribbonTypesXml, $templatePath)
 
-# Try to find MSBuild-generated manifest as template
-$msbuildManifest = "bin/Release/${{assemblyName}}.dll.manifest"
-$templateExists = Test-Path $msbuildManifest
+# Check for manifest template (priority order):
+# 1. Explicit template file provided via Bazel attribute (recommended)
+# 2. MSBuild-generated manifest in bin/Release/ (legacy fallback)
+# 3. Generate minimal manifest with mage.exe (last resort)
+
+$templateExists = $false
+$templateSource = ""
+
+if ($templatePath -and (Test-Path $templatePath)) {{
+    # Priority 1: Use explicit template from Bazel attribute
+    $msbuildManifest = $templatePath
+    $templateExists = $true
+    $templateSource = "Bazel manifest_template attribute"
+    Write-Host "Using manifest template from: $templatePath"
+}} else {{
+    # Priority 2: Try MSBuild-generated manifest (legacy behavior)
+    $msbuildManifest = "bin/Release/${{assemblyName}}.dll.manifest"
+    if (Test-Path $msbuildManifest) {{
+        $templateExists = $true
+        $templateSource = "bin/Release/ directory"
+        Write-Host "Using manifest template from: $msbuildManifest"
+    }}
+}}
 
 if (-not $templateExists) {{
-    Write-Warning "MSBuild manifest template not found at $msbuildManifest"
-    Write-Warning "Generating minimal manifest. For full dependency list, run 'msbuild /t:Build /p:Configuration=Release' first."
+    Write-Warning "No manifest template found."
+    Write-Warning "Generating minimal manifest with mage.exe. For full dependency list:"
+    Write-Warning "  Option 1: Add manifest_template attribute to net_vsto_addin rule (recommended)"
+    Write-Warning "  Option 2: Run 'msbuild /t:Build /p:Configuration=Release' before Bazel build"
 }}
 
 # Create staging directory in Windows TEMP
@@ -414,6 +441,11 @@ try {{
         content = generate_script_content,
     )
 
+    # Build inputs list (include template file if provided)
+    script_inputs = [generate_script, mage_wrapper, mage_tool] + all_dlls
+    if manifest_template_file:
+        script_inputs.append(manifest_template_file)
+
     # Execute manifest generation script
     dotnet.actions.run(
         executable = "powershell.exe",
@@ -431,8 +463,9 @@ try {{
             office_app,
             friendly_name,
             ribbon_types_xml,
+            manifest_template_file.path if manifest_template_file else "",
         ],
-        inputs = [generate_script, mage_wrapper, mage_tool] + all_dlls,
+        inputs = script_inputs,
         outputs = [unsigned_manifest],
         mnemonic = "GenerateApplicationManifest",
         progress_message = "Generating application manifest for {}".format(name),

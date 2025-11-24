@@ -154,6 +154,7 @@ def _vsto_addin_impl(ctx):
             ribbon_types = ctx.attr.ribbon_types,
             certificate_file = ctx.file.signing_cert,
             certificate_password = ctx.attr.cert_password,
+            manifest_template_file = ctx.file.manifest_template,
         )
         output_files.append(app_manifest)
 
@@ -234,6 +235,10 @@ net_vsto_addin = rule(
         ),
         "cert_password": attr.string(
             doc = "Optional certificate password",
+        ),
+        "manifest_template": attr.label(
+            allow_single_file = [".manifest", ".template"],
+            doc = "Optional MSBuild-generated manifest template file. If provided, this template is used instead of generating a minimal manifest with mage.exe. This is recommended for VSTO add-ins to ensure all dependencies are properly listed.",
         ),
         "mage_wrapper": attr.label(
             executable = True,
