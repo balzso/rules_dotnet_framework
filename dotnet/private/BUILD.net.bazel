@@ -2,16 +2,18 @@ package(default_visibility = ["//visibility:public"])
 
 filegroup(
     name = "mcs_bin",
-    srcs = glob([
-        "mcs_bin/*",
-    ]),
+    srcs = glob(
+        ["mcs_bin/*"],
+        allow_empty = True,
+    ),
 )
 
 filegroup(
     name = "mono_bin",
-    srcs = glob([
-        "mono_bin/*",
-    ]),
+    srcs = glob(
+        ["mono_bin/*"],
+        allow_empty = True,
+    ),
 )
 
 filegroup(
