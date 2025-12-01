@@ -13,7 +13,7 @@ load("@rules_dotnet_framework//dotnet/private:vsto_utilities.bzl", "vsto_utiliti
 load("@rules_dotnet_framework//dotnet/private/vsto:vsto_runtime.bzl", "vsto_runtime_register")
 load("@rules_dotnet_framework//dotnet/private:nugets.bzl", "dotnet_repositories_nugets")
 load("@rules_dotnet_framework//dotnet/private/rules:gac_net.bzl", "net_gac4")
-load("@rules_dotnet_framework//dotnet/private/rules:nuget.bzl", "dotnet_nuget_new")
+load("@rules_dotnet_framework//dotnet/private/rules:nuget.bzl", "dotnet_nuget")  # Changed from dotnet_nuget_new
 load("@rules_dotnet_framework//dotnet/platform:list.bzl", "DOTNET_NET_FRAMEWORKS")
 
 # Repository extension for external dependencies
@@ -137,8 +137,8 @@ def _toolchain_extension_impl(module_ctx):
     """Implementation of the toolchain module extension.
     
     This extension handles:
-    - Registering .NET Framework toolchains
-    - Registering SDKs for different .NET Framework versions
+    - Declaring .NET Framework toolchains (targets are created via declare_toolchains())
+    - Registering SDKs for different .NET Framework versions  
     - Registering VSTO runtime for VSTO add-in development
     - Fetching NuGet repositories
     - Registering GAC4 assemblies
@@ -147,24 +147,27 @@ def _toolchain_extension_impl(module_ctx):
         module_ctx: The module context provided by Bazel
         
     Returns:
-        Extension metadata
+        Extension metadata with toolchain registrations
     """
     
     # Track if we've registered defaults to avoid duplication
-    toolchains_registered = False
+    toolchains_to_register = []
     nugets_registered = False
     nuget_repos = []
     registered_nugets = {}  # Track registered NuGet packages to avoid duplicates
     
     # Process all modules and their tags
     for mod in module_ctx.modules:
-        # Register toolchains
+        # Collect toolchains to register
         for tag in mod.tags.toolchain:
-            if tag.register_default and not toolchains_registered:
-                # Note: In Bzlmod, toolchains are registered via register_toolchains() 
-                # directive in the root module's MODULE.bazel, not here in the extension.
-                # We just track that default toolchains were requested.
-                toolchains_registered = True
+            if tag.register_default and not toolchains_to_register:
+                # Collect all .NET Framework toolchain labels
+                # These targets are created by declare_toolchains() in BUILD file
+                toolchains_to_register = [
+                    "@rules_dotnet_framework//dotnet/toolchain:dotnet_net_windows_amd64",
+                    "@rules_dotnet_framework//dotnet/toolchain:dotnet_net_linux_amd64",
+                    "@rules_dotnet_framework//dotnet/toolchain:dotnet_net_darwin_amd64",
+                ]
         
         # Register SDKs
         for tag in mod.tags.sdk:
@@ -191,7 +194,7 @@ def _toolchain_extension_impl(module_ctx):
                 # Skip duplicate registration
                 continue
             
-            dotnet_nuget_new(
+            dotnet_nuget(
                 name = tag.name,
                 package = tag.package,
                 version = tag.version,

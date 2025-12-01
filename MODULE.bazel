@@ -87,3 +87,10 @@ toolchain.wix(name = "wix_sdk")
 # by toolchain.nugets() call above. They are available for VSTO add-ins automatically
 # via net_vsto_addin rule.
 
+# Register .NET Framework toolchains for Bzlmod
+# These toolchains are defined in //dotnet/toolchain:BUILD.bazel via declare_toolchains()
+register_toolchains(
+    "//dotnet/toolchain:dotnet_net_windows_amd64",
+    "//dotnet/toolchain:dotnet_net_linux_amd64",
+    "//dotnet/toolchain:dotnet_net_darwin_amd64",
+)
