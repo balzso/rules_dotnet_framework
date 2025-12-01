@@ -1,7 +1,20 @@
-# Disable Bzlmod to use WORKSPACE file for .NET Framework dependencies
-# Bazel 8+ enables Bzlmod by default, but this project uses WORKSPACE-based setup
-common --noenable_bzlmod
-common --enable_workspace
+# ============================================================================
+# MODULE.bazel (Bzlmod) Configuration
+# ============================================================================
+# This project now supports MODULE.bazel! 
+# To use MODULE.bazel instead of WORKSPACE, enable bzlmod:
+common --enable_bzlmod
+
+# If you need to use WORKSPACE (legacy), uncomment these lines:
+# common --noenable_bzlmod
+# common --enable_workspace
+# ============================================================================
+
+# Show more information during builds
+common --announce_rc
+
+# Verbose failures for debugging
+build --verbose_failures
 
 # Docker Sandbox Mode
 build:docker-sandbox --host_javabase=@rbe_default//java:jdk

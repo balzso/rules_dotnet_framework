@@ -15,7 +15,7 @@
 Toolchain rules used by dotnet.
 """
 
-load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
+load("@rules_dotnet_framework//dotnet/private:paths.bzl", "paths")
 load("@rules_dotnet_framework//dotnet/private/actions:assembly.bzl", "emit_assembly")
 load("@rules_dotnet_framework//dotnet/private/actions:resx.bzl", "emit_resx")
 

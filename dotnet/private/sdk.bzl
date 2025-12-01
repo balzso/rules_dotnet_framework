@@ -1,5 +1,5 @@
 load("@rules_dotnet_framework//dotnet/private:common.bzl", "bat_extension", "executable_extension")
-load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
+load("@rules_dotnet_framework//dotnet/private:paths.bzl", "paths")
 
 # Mono for linux, windows and macos layouts fies differentely
 # So we provide an implementation for each host

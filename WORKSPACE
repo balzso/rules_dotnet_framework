@@ -1,5 +1,18 @@
 workspace(name = "rules_dotnet_framework")
 
+# ============================================================================
+# MODULE.bazel Migration Path
+# ============================================================================
+# This project now supports both WORKSPACE and MODULE.bazel (Bzlmod).
+# For new projects, we recommend using MODULE.bazel (requires Bazel 7.0+).
+#
+# OPTION 1 (Recommended): Simple one-call setup
+# load("@rules_dotnet_framework//dotnet:workspace_compat.bzl", "setup_dotnet_framework")
+# setup_dotnet_framework()
+#
+# OPTION 2: Keep the existing explicit setup below (deprecated but still supported)
+# ============================================================================
+
 load("@rules_dotnet_framework//dotnet:deps.bzl", "dotnet_repositories")
 
 dotnet_repositories()

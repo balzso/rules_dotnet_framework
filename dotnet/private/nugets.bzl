@@ -4,8 +4,13 @@ load("@rules_dotnet_framework//dotnet/private/rules:nuget.bzl", "dotnet_nuget_ne
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def dotnet_repositories_nugets():
-    dotnet_repositories_nuget()
-    dotnet_repositories_nuget2()
+    # NOTE: dotnet_repositories_nuget() and dotnet_repositories_nuget2() calls removed
+    # These register old NuGet package versions (e.g., newtonsoft.json v9.0.1)
+    # which conflict with newer versions required by applications.
+    # Applications should register their required NuGet packages via nuget_register tag.
+    #
+    # We only keep Microsoft.NETFramework.ReferenceAssemblies.* and Office PIA registrations
+    # which are needed by rules_dotnet_framework itself.
 
     dotnet_nuget_new(
         name = "Microsoft.NETFramework.ReferenceAssemblies.net45.1.0.0",

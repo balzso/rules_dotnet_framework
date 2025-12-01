@@ -1,6 +1,6 @@
 """File staging action for WiX installer builds"""
 
-load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
+load("@rules_dotnet_framework//dotnet/private:paths.bzl", "paths")
 
 def stage_vsto_files_for_wix(
         dotnet,

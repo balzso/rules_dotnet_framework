@@ -1,4 +1,4 @@
-load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
+load("@rules_dotnet_framework//dotnet/private:paths.bzl", "paths")
 
 def _make_runner_arglist(dotnet, source, output):
     args = dotnet.actions.args()

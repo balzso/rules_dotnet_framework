@@ -6,7 +6,7 @@ load(
     "@rules_dotnet_framework//dotnet/private:providers.bzl",
     "DotnetResourceList",
 )
-load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
+load("@rules_dotnet_framework//dotnet/private:paths.bzl", "paths")
 
 def _resx_impl(ctx):
     """dotnet_resx_impl emits actions for compiling resx to resource."""

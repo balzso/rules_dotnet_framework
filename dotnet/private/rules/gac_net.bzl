@@ -1,5 +1,3 @@
-load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
-
 _gac2_path = "C:/Windows/assembly"
 _gac4_path = "C:/Windows/Microsoft.NET/assembly"
 
@@ -9,7 +7,8 @@ def _net_gac_impl(ctx, gac, prefix = None):
 
     # csc.exe /reference:path 260 limit
     for arch in ["GAC", "GAC_MSIL", "GAC_32", "GAC_64"]:
-        gac_path = ctx.path(paths.join(_gac2_path if gac == "gac2" else _gac4_path, arch, name, version_token))
+        base_path = _gac2_path if gac == "gac2" else _gac4_path
+        gac_path = ctx.path("{}/{}/{}/{}".format(base_path, arch, name, version_token))
         if gac_path.exists:
             ctx.symlink(gac_path, arch)
 

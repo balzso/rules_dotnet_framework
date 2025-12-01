@@ -1,7 +1,13 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 def dotnet_repositories():
-    _maybe(
+    """Set up external repositories required by rules_dotnet_framework.
+    
+    This function fetches bazel-skylib (as rules_dotnet_skylib) for WORKSPACE mode.
+    In MODULE.bazel mode, @bazel_skylib is used directly via repo_mapping in extensions.bzl.
+    """
+    maybe(
         http_archive,
         name = "rules_dotnet_skylib",
         urls = [
@@ -10,7 +16,3 @@ def dotnet_repositories():
         ],
         sha256 = "97e70364e9249702246c0e9444bccdc4b847bed1eb03c5a3ece4f83dfe6abc44",
     )
-
-def _maybe(repo_rule, name, **kwargs):
-    if name not in native.existing_rules():
-        repo_rule(name = name, **kwargs)

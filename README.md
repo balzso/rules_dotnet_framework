@@ -2,6 +2,14 @@
 
 Bazel build rules for .NET Framework, VSTO Office add-ins, and WiX installers on Windows.
 
+## 🎉 Now with MODULE.bazel (Bzlmod) Support!
+
+This project now supports both **MODULE.bazel** (recommended for Bazel 7.0+) and **WORKSPACE** (legacy). 
+
+- **New projects:** Use MODULE.bazel for modern dependency management
+- **Existing projects:** Keep using WORKSPACE or migrate gradually
+- **Migration guide:** See [MIGRATION_TO_MODULE.md](MIGRATION_TO_MODULE.md)
+
 ## Status
 
 This is a fork of [rules_dotnet](https://github.com/bazelbuild/rules_dotnet) specifically for .NET Framework development. The original project dropped Framework support in favor of .NET Core. This repository maintains .NET Framework support for projects that require it.
@@ -14,6 +22,7 @@ This is a fork of [rules_dotnet](https://github.com/bazelbuild/rules_dotnet) spe
 - NuGet package management
 - **VSTO (Visual Studio Tools for Office) add-in development**
 - **WiX Toolset v5 for Windows Installer (.msi) packages**
+- **MODULE.bazel (Bzlmod) and WORKSPACE**
 
 **Not Supported:**
 - .NET Core / .NET 5+ (use the official [rules_dotnet](https://github.com/bazelbuild/rules_dotnet) instead)
@@ -44,7 +53,104 @@ This is a fork of [rules_dotnet](https://github.com/bazelbuild/rules_dotnet) spe
 
 ## Quick Start
 
-### 1. Add to your WORKSPACE
+### Setup Options
+
+This project supports both **MODULE.bazel** (Bzlmod, recommended for Bazel 7.0+) and **WORKSPACE** (legacy).
+
+#### Option 1: Using MODULE.bazel (Recommended for Bazel 7.0+)
+
+Add to your `MODULE.bazel`:
+
+```python
+bazel_dep(name = "rules_dotnet_framework", version = "0.1.0")
+
+# Configure .NET Framework toolchains and SDKs
+toolchain = use_extension("@rules_dotnet_framework//dotnet:extensions.bzl", "toolchain")
+toolchain.toolchain(register_default = True)
+toolchain.nugets()
+toolchain.sdk()  # Default .NET Framework SDK
+
+# Optional: Register specific .NET Framework versions
+toolchain.sdk(framework = "net472", name = "net_sdk_net472")
+toolchain.sdk(framework = "net48", name = "net_sdk_net48")
+
+# Optional: For VSTO add-in development
+toolchain.vsto(name = "vsto_runtime")
+
+# Optional: Register GAC4 assemblies
+toolchain.gac4(
+    name = "System.ComponentModel.DataAnnotations",
+    token = "31bf3856ad364e35",
+    version = "4.0.0.0",
+)
+```
+
+**Note:** When using a local or git checkout instead of a published version, use:
+
+```python
+bazel_dep(name = "rules_dotnet_framework")
+local_path_override(
+    module_name = "rules_dotnet_framework",
+    path = "../rules_dotnet_framework",  # Adjust to your local path
+)
+
+# Or for git:
+git_override(
+    module_name = "rules_dotnet_framework",
+    remote = "https://github.com/yourusername/rules_dotnet_framework.git",
+    commit = "...",  # or branch = "main"
+)
+```
+
+#### Option 2: Using WORKSPACE (Legacy)
+
+**Simple setup (recommended):**
+
+```python
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+    name = "rules_dotnet_framework",
+    remote = "https://github.com/balzso/rules_dotnet_framework.git",
+    branch = "main",
+)
+
+load("@rules_dotnet_framework//dotnet:workspace_compat.bzl", "setup_dotnet_framework")
+setup_dotnet_framework()
+```
+
+**Advanced setup (more control):**
+
+```python
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+    name = "rules_dotnet_framework",
+    remote = "https://github.com/balzso/rules_dotnet_framework.git",
+    branch = "main",
+)
+
+load("@rules_dotnet_framework//dotnet:deps.bzl", "dotnet_repositories")
+dotnet_repositories()
+
+load(
+    "@rules_dotnet_framework//dotnet:defs.bzl",
+    "dotnet_register_toolchains",
+    "dotnet_repositories_nugets",
+    "net_register_sdk",
+)
+
+# Register .NET Framework SDK
+net_register_sdk()
+
+# Register toolchains
+dotnet_register_toolchains()
+
+# Load NuGet packages for testing (optional)
+dotnet_repositories_nugets()
+```
+
+### 1. Add to your WORKSPACE (DEPRECATED - Use MODULE.bazel instead)
 
 ```python
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")

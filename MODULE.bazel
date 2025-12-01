@@ -1,0 +1,89 @@
+"""rules_dotnet_framework - Bazel rules for .NET Framework projects"""
+
+module(
+    name = "rules_dotnet_framework",
+    version = "0.1.0",
+    compatibility_level = 1,
+)
+
+# Core Bazel dependencies from Bazel Central Registry
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "platforms", version = "0.0.11")
+bazel_dep(name = "rules_cc", version = "0.1.1")
+
+# Dotnet extension for repositories
+dotnet = use_extension("//dotnet:extensions.bzl", "dotnet")
+dotnet.repositories()
+use_repo(dotnet, "rules_dotnet_skylib")
+
+# Toolchain extension for .NET Framework toolchains and SDKs
+toolchain = use_extension("//dotnet:extensions.bzl", "toolchain")
+toolchain.toolchain(register_default = True)
+# Note: toolchain.nugets() registers all standard NuGet packages including ReferenceAssemblies
+toolchain.nugets()  # This registers hardcoded NuGet packages from nugets.bzl
+toolchain.vsto(name = "vsto_runtime")
+toolchain.sdk()  # Default .NET Framework SDK
+
+# Make VSTO runtime, default SDK, WiX SDK, Office PIAs, and ReferenceAssemblies visible to consumers
+use_repo(
+    toolchain,
+    "vsto_runtime",
+    "net_sdk",
+    "wix_sdk",
+    # Explicit SDK registrations
+    "net_sdk_net45",
+    "net_sdk_net451",
+    "net_sdk_net452",
+    "net_sdk_net46",
+    "net_sdk_net461",
+    "net_sdk_net462",
+    "net_sdk_net47",
+    "net_sdk_net471",
+    "net_sdk_net472",
+    "net_sdk_net48",
+    # Office Primary Interop Assemblies (registered by toolchain.nugets())
+    "microsoft.office.interop.excel",
+    "microsoft.office.interop.word",
+    "microsoft.office.interop.outlook",
+    "microsoft.office.interop.powerpoint",
+    # Microsoft.NETFramework.ReferenceAssemblies packages (registered by toolchain.nugets())
+    "Microsoft.NETFramework.ReferenceAssemblies.net45.1.0.0",
+    "Microsoft.NETFramework.ReferenceAssemblies.net451.1.0.0",
+    "Microsoft.NETFramework.ReferenceAssemblies.net452.1.0.0",
+    "Microsoft.NETFramework.ReferenceAssemblies.net46.1.0.0",
+    "Microsoft.NETFramework.ReferenceAssemblies.net461.1.0.0",
+    "Microsoft.NETFramework.ReferenceAssemblies.net462.1.0.0",
+    "Microsoft.NETFramework.ReferenceAssemblies.net47.1.0.0",
+    "Microsoft.NETFramework.ReferenceAssemblies.net471.1.0.0",
+    "Microsoft.NETFramework.ReferenceAssemblies.net472.1.0.0",
+    "Microsoft.NETFramework.ReferenceAssemblies.net48.1.0.0",
+)
+
+# Register SDKs for all supported .NET Framework versions
+# Note: Only .NET Framework 4.5+ are supported via downloadable SDKs
+# Earlier frameworks (2.0-4.0) are not included as they lack downloadable reference assemblies
+toolchain.sdk(framework = "net45", name = "net_sdk_net45")
+toolchain.sdk(framework = "net451", name = "net_sdk_net451")
+toolchain.sdk(framework = "net452", name = "net_sdk_net452")
+toolchain.sdk(framework = "net46", name = "net_sdk_net46")
+toolchain.sdk(framework = "net461", name = "net_sdk_net461")
+toolchain.sdk(framework = "net462", name = "net_sdk_net462")
+toolchain.sdk(framework = "net47", name = "net_sdk_net47")
+toolchain.sdk(framework = "net471", name = "net_sdk_net471")
+toolchain.sdk(framework = "net472", name = "net_sdk_net472")
+toolchain.sdk(framework = "net48", name = "net_sdk_net48")
+
+# GAC4 dependencies
+toolchain.gac4(
+    name = "System.ComponentModel.DataAnnotations",
+    token = "31bf3856ad364e35",
+    version = "4.0.0.0",
+)
+
+# WiX Toolset SDK for installer builds
+toolchain.wix(name = "wix_sdk")
+
+# NOTE: Office Primary Interop Assemblies (PIAs) are registered in nugets.bzl
+# by toolchain.nugets() call above. They are available for VSTO add-ins automatically
+# via net_vsto_addin rule.
+

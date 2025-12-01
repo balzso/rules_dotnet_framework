@@ -2,7 +2,6 @@ load(
     "@rules_dotnet_framework//dotnet/private:providers.bzl",
     "DotnetLibrary",
 )
-load("@rules_dotnet_skylib//lib:dicts.bzl", "dicts")
 load(
     "@rules_dotnet_framework//dotnet/platform:list.bzl",
     "DOTNET_CORE_NAMES",
@@ -77,10 +76,10 @@ def _dotnet_nuget_new_impl(repository_ctx):
 
 dotnet_nuget_new = repository_rule(
     _dotnet_nuget_new_impl,
-    attrs = dicts.add(_dotnet_nuget_attrs, {
+    attrs = _dotnet_nuget_attrs | {
         "build_file": attr.label(allow_files = True),
         "build_file_content": attr.string(),
-    }),
+    },
 )
 
 _FUNC = """

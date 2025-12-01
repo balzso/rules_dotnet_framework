@@ -13,7 +13,7 @@ load(
     "@rules_dotnet_framework//dotnet/private:providers.bzl",
     "DotnetResourceList",
 )
-load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
+load("@rules_dotnet_framework//dotnet/private:paths.bzl", "paths")
 
 def _resource_impl(ctx):
     """Implements net_resource rule for embedding arbitrary files as resources."""

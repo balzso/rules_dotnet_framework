@@ -138,6 +138,12 @@ _test_environment = repository_rule(
 )
 
 def test_environment():
+    """Setup test environment - supports both WORKSPACE and MODULE.bazel.
+    
+    This function checks if we're running in MODULE.bazel mode and adjusts
+    the test environment accordingly. In MODULE mode, some repository rules
+    may have different names or locations.
+    """
     _test_environment(name = "bazel_test")
 
 CURRENT_VERSION = "current"

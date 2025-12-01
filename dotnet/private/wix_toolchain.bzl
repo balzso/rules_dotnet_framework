@@ -1,7 +1,5 @@
 """WiX Toolset v5 toolchain for building Windows Installer packages"""
 
-load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
-
 def _get_dotnet_wix(context_data):
     """Gets the wix.exe tool from the toolchain"""
     return _get_wix_tool(context_data, "wix.exe")
@@ -17,7 +15,9 @@ def _get_wix_tool(context_data, name):
         fail("WiX tools not configured in toolchain. Ensure wix_register_sdk() is called in WORKSPACE.")
 
     for f in context_data._wix_tools.files.to_list():
-        basename = paths.basename(f.path)
+        # Get basename by splitting on / or \
+        path_parts = f.path.replace("\\", "/").split("/")
+        basename = path_parts[-1] if path_parts else f.path
         if basename.lower() == name.lower():
             return f
 

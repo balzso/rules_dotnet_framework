@@ -1,6 +1,6 @@
 """Actions for generating ClickOnce application manifests for VSTO add-ins"""
 
-load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
+load("@rules_dotnet_framework//dotnet/private:paths.bzl", "paths")
 
 def emit_application_manifest(
         dotnet,

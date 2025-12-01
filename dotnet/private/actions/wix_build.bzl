@@ -1,6 +1,6 @@
 """WiX build action for creating Windows Installer packages"""
 
-load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
+load("@rules_dotnet_framework//dotnet/private:paths.bzl", "paths")
 
 def emit_wix_package(
         ctx,

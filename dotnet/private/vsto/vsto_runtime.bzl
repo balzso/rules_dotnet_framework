@@ -2,7 +2,6 @@
 
 # NOTE: Import directly from source to avoid circular dependency with defs.bzl
 load("@rules_dotnet_framework//dotnet/private/rules:import.bzl", "net_import_library")
-load("@rules_dotnet_skylib//lib:paths.bzl", "paths")
 
 def _find_vsto_runtime_path():
     """
